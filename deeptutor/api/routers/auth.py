@@ -705,6 +705,7 @@ def _learning_surface_for_path(
         ("/api/dashboard/learning-library/books", "books"),
         ("/api/dashboard/learning-library/mastery", "chat"),
         ("/api/chat", "chat"),
+        ("/api/obsidian", "chat"),
         ("/api/question", "chat"),
         ("/api/question-notebook", "chat"),
         ("/api/sessions", "chat"),

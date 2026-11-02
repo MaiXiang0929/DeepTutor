@@ -26,7 +26,7 @@ class ObsidianCapability(KnowledgeCapability):
     """Turn-scoped integration for a connected Obsidian vault."""
 
     name = "obsidian"
-    owned_tools = OBSIDIAN_TOOL_NAMES
+    owned_tools = (*OBSIDIAN_TOOL_NAMES, "web_fetch")
 
     def is_active(self, context: UnifiedContext) -> bool:
         return vault_for_turn(context) is not None
@@ -66,6 +66,7 @@ class ObsidianCapability(KnowledgeCapability):
         # forged to read/write outside the connected vault.
         updated = dict(kwargs)
         updated["_vault_path"] = binding["path"]
+        updated["_vault_ref"] = binding["ref"]
         return updated
 
     def pre_loop_seed(self, context: UnifiedContext) -> str:

@@ -57,6 +57,8 @@ installation before deciding to reinstall it.
   server folders and selecting a workspace root.
 - [Containerization](CONTAINERIZATION.md) and [request screening](SECURITY_GUARD.md):
   deployment configuration, OAuth callback ports and proxy boundaries.
+- [Obsidian learning](OBSIDIAN_LEARNING.md): grounded questions, note previews,
+  and converting materials into explicitly reviewed learning notes.
 - [Knowledge migration](KNOWLEDGE_MIGRATION.md), [indexing recovery](INDEXING_RECOVERY.md),
   and [source visuals](SOURCE_VISUALS.md): ingestion, publication, original
   evidence and visual assessment.

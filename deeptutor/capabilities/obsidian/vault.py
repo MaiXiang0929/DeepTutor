@@ -15,8 +15,10 @@ property); nothing here edits-in-place or deletes existing prose.
 
 from __future__ import annotations
 
-from pathlib import Path
+import os
+from pathlib import Path, PureWindowsPath
 import re
+import stat
 from typing import Any
 
 import yaml
@@ -41,15 +43,37 @@ class VaultError(Exception):
 
 
 def _is_ignored(rel: Path) -> bool:
-    return any(part in IGNORED_DIRS for part in rel.parts)
+    return any(part.casefold() in IGNORED_DIRS for part in rel.parts)
 
 
-def _iter_markdown(root: Path):
+def _iter_markdown(root: Path, base: Path | None = None):
     """Yield every user-facing ``.md`` file under ``root`` (ignored dirs skipped)."""
-    for path in sorted(root.rglob("*.md")):
-        if _is_ignored(path.relative_to(root)):
-            continue
-        yield path
+    root = root.resolve()
+    # Prune before traversal: rglob would enter vault internals and can follow
+    # directory junctions on Windows. Never recurse through linked directories.
+    paths = []
+    for directory, dirs, files in os.walk(base or root, followlinks=False):
+        dirs[:] = sorted(
+            name
+            for name in dirs
+            if name.casefold() not in IGNORED_DIRS
+            and not (Path(directory) / name).is_symlink()
+            and not (
+                getattr((Path(directory) / name).lstat(), "st_file_attributes", 0)
+                & getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+            )
+        )
+        for name in files:
+            if not name.lower().endswith(".md"):
+                continue
+            path = Path(directory) / name
+            try:
+                safe = _safe_join(root, path.relative_to(root).as_posix())
+            except (VaultError, OSError, ValueError):
+                continue
+            if safe.is_file():
+                paths.append(safe)
+    yield from sorted(set(paths))
 
 
 def _read_text(path: Path) -> str:
@@ -88,14 +112,38 @@ def _read_text_exact(path: Path) -> str:
 def _safe_join(root: Path, rel: str) -> Path:
     """Resolve ``rel`` under ``root``, refusing anything that escapes the vault."""
     root_resolved = root.resolve()
-    candidate = (root_resolved / rel.lstrip("/")).resolve()
+    rel = rel.replace("\\", "/")
+    if PureWindowsPath(rel).drive or rel.startswith("/"):
+        raise VaultError(f"Path {rel!r} must be relative to the vault.")
+    if _is_ignored(Path(rel)):
+        raise VaultError(f"Path {rel!r} points into vault internals.")
+    candidate = (root_resolved / rel).resolve()
     if candidate != root_resolved and root_resolved not in candidate.parents:
         raise VaultError(f"Path {rel!r} escapes the vault.")
+    if _is_ignored(candidate.relative_to(root_resolved)):
+        raise VaultError(f"Path {rel!r} points into vault internals.")
     return candidate
 
 
 def _with_md_suffix(rel: str) -> str:
     return rel if rel.lower().endswith(".md") else f"{rel}.md"
+
+
+def _reference_target(ref: str) -> str:
+    ref = (ref or "").strip().replace("\\", "/")
+    if ref.startswith("![["):
+        ref = ref[3:]
+    elif ref.startswith("[["):
+        ref = ref[2:]
+    return re.split(r"[#^|]", ref.removesuffix("]]"), maxsplit=1)[0].strip()
+
+
+def _strings(value: Any) -> list[str]:
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, list):
+        return [item for item in value if isinstance(item, str)]
+    return []
 
 
 def resolve_note(root: Path, ref: str) -> Path | None:
@@ -105,22 +153,61 @@ def resolve_note(root: Path, ref: str) -> Path | None:
     name (``Note``) matched by basename anywhere in the vault. Returns ``None``
     when nothing matches.
     """
-    ref = (ref or "").strip().split("#", 1)[0].split("|", 1)[0].strip()
+    return _resolve_reference(root, ref)
+
+
+def _note_snapshot(
+    root: Path,
+) -> tuple[dict[str, list[Path]], dict[Path, tuple[str, dict[str, Any], str]]]:
+    """Read accessible notes once and index exact basenames and aliases.
+
+    This is operation-local: subsequent operations always see current files.
+    Keeping all destinations preserves ambiguity instead of picking a winner.
+    """
+    names: dict[str, list[Path]] = {}
+    documents: dict[Path, tuple[str, dict[str, Any], str]] = {}
+    for path in _iter_markdown(root):
+        try:
+            text = _read_text(path)
+        except OSError:
+            continue
+        frontmatter, body = split_frontmatter(text)
+        documents[path] = (text, frontmatter, body)
+        keys = {
+            _reference_target(name).casefold()
+            for name in [path.stem, *_strings(frontmatter.get("aliases"))]
+        }
+        for key in keys:
+            if key:
+                names.setdefault(key, []).append(path)
+    return names, documents
+
+
+def _resolve_reference(
+    root: Path, ref: str, names: dict[str, list[Path]] | None = None
+) -> Path | None:
+    ref = _reference_target(ref)
     if not ref:
         return None
     # Explicit path (has a separator or .md suffix) → resolve directly.
     if "/" in ref or ref.lower().endswith(".md"):
         candidate = _safe_join(root, _with_md_suffix(ref))
-        return candidate if candidate.is_file() else None
-    # Bare name → first .md whose stem matches (case-insensitive fallback).
-    wanted = ref.lower()
-    fallback: Path | None = None
-    for path in _iter_markdown(root):
-        if path.stem == ref:
-            return path
-        if fallback is None and path.stem.lower() == wanted:
-            fallback = path
-    return fallback
+        if candidate.is_file():
+            return candidate
+        # Older links may include the standalone vault's own folder name.
+        parts = ref.split("/")
+        if len(parts) > 1 and parts[0].casefold() == root.resolve().name.casefold():
+            candidate = _safe_join(root, _with_md_suffix("/".join(parts[1:])))
+            if candidate.is_file():
+                return candidate
+        return None
+    if names is None:
+        names, _ = _note_snapshot(root)
+    matches = names.get(ref.casefold(), [])
+    if len(matches) > 1:
+        choices = ", ".join(_rel(root, path) for path in matches)
+        raise VaultError(f"Ambiguous note {ref!r}; use a vault-relative path: {choices}")
+    return matches[0] if matches else None
 
 
 def split_frontmatter(text: str) -> tuple[dict[str, Any], str]:
@@ -170,34 +257,47 @@ def read_note(root: Path, ref: str) -> dict[str, Any]:
     return {"path": _rel(root, path), "frontmatter": frontmatter, "body": body}
 
 
-def search_notes(root: Path, query: str, limit: int = 20) -> list[dict[str, str]]:
-    """Case-insensitive substring search over note titles and bodies."""
+def search_notes(root: Path, query: str, limit: int | None = 20) -> list[dict[str, str]]:
+    """Rank Unicode query terms by coverage, then title/alias/tag/body weight."""
     query = (query or "").strip()
-    if not query:
+    if not query or (limit is not None and limit <= 0):
         return []
-    needle = query.lower()
-    hits: list[dict[str, str]] = []
+    terms = list(dict.fromkeys(re.findall(r"[^\W_]+", query.casefold())))
+    if not terms:
+        return []
+    hits = []
     for path in _iter_markdown(root):
         try:
             text = _read_text(path)
         except OSError:
             continue
-        if needle in path.stem.lower() or needle in text.lower():
-            hits.append({"path": _rel(root, path), "snippet": _snippet(text, query)})
-            if len(hits) >= limit:
-                break
-    return hits
+        fm, body = split_frontmatter(text)
+        fields = [
+            (path.stem.casefold(), 10),
+            (" ".join(_strings(fm.get("aliases"))).casefold(), 8),
+            (" ".join(_strings(fm.get("tags"))).casefold(), 6),
+            (body.casefold(), 1),
+        ]
+        scores = [
+            max((weight for value, weight in fields if term in value), default=0) for term in terms
+        ]
+        coverage = sum(score > 0 for score in scores)
+        if coverage:
+            match = next((term for term in terms if term in body.casefold()), query)
+            hits.append((coverage, sum(scores), _rel(root, path), _snippet(body, match)))
+    hits.sort(key=lambda hit: (-hit[0], -hit[1], hit[2].casefold(), hit[2]))
+    return [{"path": path, "snippet": snippet} for _, _, path, snippet in hits[:limit]]
 
 
-def list_notes(root: Path, folder: str = "", limit: int = 200) -> list[str]:
+def list_notes(root: Path, folder: str = "", limit: int | None = 200) -> list[str]:
     """List note paths (vault-relative), optionally under ``folder``."""
     base = _safe_join(root, folder) if folder.strip() else root.resolve()
-    if not base.exists():
+    if not base.exists() or (limit is not None and limit <= 0):
         return []
     out: list[str] = []
-    for path in _iter_markdown(base if base.is_dir() else root):
+    for path in _iter_markdown(root, base if base.is_dir() else root.resolve()):
         out.append(_rel(root, path))
-        if len(out) >= limit:
+        if limit is not None and len(out) >= limit:
             break
     return out
 
@@ -205,48 +305,45 @@ def list_notes(root: Path, folder: str = "", limit: int = 200) -> list[str]:
 def outgoing_links(root: Path, ref: str) -> list[str]:
     """The wikilink targets a note points to, in order, de-duplicated."""
     note = read_note(root, ref)
+    return _link_targets(note["frontmatter"], note["body"])
+
+
+def _link_targets(frontmatter: dict[str, Any], body: str) -> list[str]:
     seen: dict[str, None] = {}
-    for target in _WIKILINK_RE.findall(note["body"]):
-        name = target.strip()
+    for target in [*_WIKILINK_RE.findall(body), *_strings(frontmatter.get("related"))]:
+        name = _reference_target(target)
         if name:
             seen.setdefault(name, None)
     return list(seen)
 
 
-def backlinks(root: Path, ref: str, limit: int = 50) -> list[dict[str, str]]:
+def backlinks(root: Path, ref: str, limit: int | None = 50) -> list[dict[str, str]]:
     """Notes whose wikilinks resolve to the same destination as ``ref``."""
-    target = resolve_note(root, ref)
+    names, documents = _note_snapshot(root)
+    target = _resolve_reference(root, ref, names)
     if target is None:
         raise VaultError(f"Note {ref!r} not found in the vault.")
-    notes = list(_iter_markdown(root))
-    exact_names: dict[str, Path] = {}
-    folded_names: dict[str, Path] = {}
-    for note in notes:
-        exact_names.setdefault(note.stem, note)
-        folded_names.setdefault(note.stem.lower(), note)
+    if limit is not None and limit <= 0:
+        return []
+    destinations: dict[str, Path | None] = {}
 
     def points_to_target(link: str) -> bool:
-        link = link.strip()
-        if "/" in link or link.lower().endswith(".md"):
+        if link not in destinations:
             try:
-                destination = resolve_note(root, link)
+                destinations[link] = _resolve_reference(root, link, names)
             except VaultError:
-                return False
-        else:
-            destination = exact_names.get(link) or folded_names.get(link.lower())
+                # Unresolved/ambiguous source links cannot prove a backlink.
+                destinations[link] = None
+        destination = destinations[link]
         return destination is not None and destination.resolve() == target.resolve()
 
     out: list[dict[str, str]] = []
-    for path in notes:
+    for path, (text, frontmatter, body) in documents.items():
         if path == target:
             continue
-        try:
-            text = _read_text(path)
-        except OSError:
-            continue
-        if any(points_to_target(link) for link in _WIKILINK_RE.findall(text)):
+        if any(points_to_target(link) for link in _link_targets(frontmatter, body)):
             out.append({"path": _rel(root, path), "snippet": _snippet(text, target.stem)})
-            if len(out) >= limit:
+            if limit is not None and len(out) >= limit:
                 break
     return out
 
@@ -295,7 +392,11 @@ def create_note(
     if path.exists():
         raise VaultError(f"Note {_with_md_suffix(rel_path)!r} already exists; use append instead.")
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(_compose_note(frontmatter or {}, content or ""), encoding="utf-8")
+    try:
+        with path.open("x", encoding="utf-8") as handle:
+            handle.write(_compose_note(frontmatter or {}, content or ""))
+    except FileExistsError as exc:
+        raise VaultError(f"Note {rel_path!r} already exists; use append instead.") from exc
     return _rel(root, path)
 
 

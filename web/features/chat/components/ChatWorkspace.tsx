@@ -1,6 +1,7 @@
 "use client";
 
 import { COMMAND_CONFIRMATION_FAILED } from "@/features/chat/transport/command-delivery";
+import { MaterialToNotes } from "@/components/obsidian/MaterialToNotes";
 
 import { ResourceReuseContext, useResourceReusePolicy } from "@/components/chat/home/ResourceReuse";
 import { retainedKnowledgeBases } from "@/lib/resource-reuse";
@@ -2885,6 +2886,9 @@ export default function ChatWorkspace() {
                   </div>
                 </div>
               ) : null}
+              {kbOptions.filter(kb => kb.metadata?.type === "obsidian" && state.knowledgeBases.includes(knowledgeBaseRef(kb))).slice(0, 1).map(kb => (
+                <MaterialToNotes key={knowledgeBaseRef(kb)} kb={knowledgeBaseRef(kb)} onPrefill={handlePrefillComposer} />
+              ))}
               <ChatComposer
                 customizable
                 composerRef={composerRef}

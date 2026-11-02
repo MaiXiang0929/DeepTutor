@@ -1100,6 +1100,20 @@
         "title": "Body_library_add",
         "type": "object"
       },
+      "Body_material_api_obsidian_material_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_material_api_obsidian_material_post",
+        "type": "object"
+      },
       "Body_preview_office_upload_api_file_preview_pdf_post": {
         "properties": {
           "file": {
@@ -7466,6 +7480,34 @@
         "title": "MasteryCardSkip",
         "type": "object"
       },
+      "Material": {
+        "properties": {
+          "source": {
+            "title": "Source",
+            "type": "string"
+          },
+          "text": {
+            "title": "Text",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "truncated": {
+            "title": "Truncated",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "text",
+          "source",
+          "title",
+          "truncated"
+        ],
+        "title": "Material",
+        "type": "object"
+      },
       "MaterialDetail": {
         "properties": {
           "annotation_count": {
@@ -8140,6 +8182,75 @@
         "title": "NetworkSettingsUpdate",
         "type": "object"
       },
+      "NoteDraft": {
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "kb": {
+            "title": "Kb",
+            "type": "string"
+          },
+          "mode": {
+            "enum": [
+              "create",
+              "append",
+              "property"
+            ],
+            "title": "Mode",
+            "type": "string"
+          },
+          "note_href": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Note Href"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          },
+          "preview_href": {
+            "title": "Preview Href",
+            "type": "string"
+          },
+          "properties": {
+            "additionalProperties": true,
+            "title": "Properties",
+            "type": "object"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "saved"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kb",
+          "path",
+          "content",
+          "properties",
+          "mode",
+          "status",
+          "preview_href"
+        ],
+        "title": "NoteDraft",
+        "type": "object"
+      },
       "NoteGeneration": {
         "additionalProperties": false,
         "description": "The learning block on the open note page this turn fills in.\n\nSent by the note companion when a block's own \"Generate\" runs. The server\nowns the instructions that follow from it, so the learner's message stays\nexactly what they see in the conversation.",
@@ -8162,6 +8273,82 @@
           "block_id"
         ],
         "title": "NoteGeneration",
+        "type": "object"
+      },
+      "NoteLink": {
+        "properties": {
+          "href": {
+            "title": "Href",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "href"
+        ],
+        "title": "NoteLink",
+        "type": "object"
+      },
+      "NotePreview": {
+        "properties": {
+          "body": {
+            "title": "Body",
+            "type": "string"
+          },
+          "changed": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Changed"
+          },
+          "frontmatter": {
+            "additionalProperties": true,
+            "title": "Frontmatter",
+            "type": "object"
+          },
+          "heading": {
+            "title": "Heading",
+            "type": "string"
+          },
+          "kb": {
+            "title": "Kb",
+            "type": "string"
+          },
+          "links": {
+            "items": {
+              "$ref": "#/components/schemas/NoteLink"
+            },
+            "title": "Links",
+            "type": "array"
+          },
+          "obsidian_uri": {
+            "title": "Obsidian Uri",
+            "type": "string"
+          },
+          "path": {
+            "title": "Path",
+            "type": "string"
+          }
+        },
+        "required": [
+          "kb",
+          "path",
+          "body",
+          "frontmatter",
+          "heading",
+          "obsidian_uri",
+          "links"
+        ],
+        "title": "NotePreview",
         "type": "object"
       },
       "NotebookCaptureRequest": {
@@ -10936,6 +11123,31 @@
           "recovery_interval_seconds"
         ],
         "title": "RuntimeStatus",
+        "type": "object"
+      },
+      "SaveDraft": {
+        "properties": {
+          "content": {
+            "maxLength": 100000,
+            "title": "Content",
+            "type": "string"
+          },
+          "path": {
+            "maxLength": 2048,
+            "title": "Path",
+            "type": "string"
+          },
+          "properties": {
+            "additionalProperties": true,
+            "title": "Properties",
+            "type": "object"
+          }
+        },
+        "required": [
+          "path",
+          "content"
+        ],
+        "title": "SaveDraft",
         "type": "object"
       },
       "ServerPayload": {
@@ -14609,6 +14821,20 @@
           "urls"
         ],
         "title": "UrlImportRequest",
+        "type": "object"
+      },
+      "UrlMaterial": {
+        "properties": {
+          "url": {
+            "maxLength": 8192,
+            "title": "Url",
+            "type": "string"
+          }
+        },
+        "required": [
+          "url"
+        ],
+        "title": "UrlMaterial",
         "type": "object"
       },
       "UsageStatistics": {
@@ -39308,6 +39534,579 @@
         "summary": "Move Record",
         "tags": [
           "notebooks"
+        ]
+      }
+    },
+    "/api/obsidian/asset": {
+      "get": {
+        "operationId": "asset_api_obsidian_asset_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kb",
+            "required": true,
+            "schema": {
+              "title": "Kb",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "path",
+            "required": true,
+            "schema": {
+              "title": "Path",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "dt_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dt Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Asset",
+        "tags": [
+          "obsidian",
+          "obsidian"
+        ]
+      }
+    },
+    "/api/obsidian/drafts/{identifier}": {
+      "get": {
+        "operationId": "draft_api_obsidian_drafts__identifier__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "title": "Identifier",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "dt_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dt Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteDraft"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Draft",
+        "tags": [
+          "obsidian",
+          "obsidian"
+        ]
+      }
+    },
+    "/api/obsidian/drafts/{identifier}/save": {
+      "post": {
+        "operationId": "save_api_obsidian_drafts__identifier__save_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "title": "Identifier",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "dt_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dt Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveDraft"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NoteDraft"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Save",
+        "tags": [
+          "obsidian",
+          "obsidian"
+        ]
+      }
+    },
+    "/api/obsidian/material": {
+      "post": {
+        "operationId": "material_api_obsidian_material_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "dt_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dt Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_material_api_obsidian_material_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Material"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Material",
+        "tags": [
+          "obsidian",
+          "obsidian"
+        ]
+      }
+    },
+    "/api/obsidian/material/url": {
+      "post": {
+        "operationId": "material_url_api_obsidian_material_url_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "dt_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dt Token"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UrlMaterial"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Material"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Material Url",
+        "tags": [
+          "obsidian",
+          "obsidian"
+        ]
+      }
+    },
+    "/api/obsidian/note": {
+      "get": {
+        "operationId": "note_api_obsidian_note_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "kb",
+            "required": true,
+            "schema": {
+              "title": "Kb",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "note",
+            "required": true,
+            "schema": {
+              "title": "Note",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "heading",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Heading",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "dt_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dt Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotePreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Note",
+        "tags": [
+          "obsidian",
+          "obsidian"
+        ]
+      }
+    },
+    "/api/obsidian/sources/{identifier}": {
+      "get": {
+        "operationId": "source_api_obsidian_sources__identifier__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "identifier",
+            "required": true,
+            "schema": {
+              "title": "Identifier",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "heading",
+            "required": false,
+            "schema": {
+              "default": "",
+              "title": "Heading",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Authorization"
+            }
+          },
+          {
+            "in": "cookie",
+            "name": "dt_token",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dt Token"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotePreview"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Source",
+        "tags": [
+          "obsidian",
+          "obsidian"
         ]
       }
     },

@@ -42,7 +42,7 @@ def _resolve(context: UnifiedContext) -> dict[str, str] | None:
             continue
         path = str(meta.get("vault_path") or "").strip()
         if path:
-            return {"name": str(meta.get("name") or ref), "path": path}
+            return {"name": str(meta.get("name") or ref), "path": path, "ref": ref}
     return None
 
 

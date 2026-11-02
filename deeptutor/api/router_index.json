@@ -1,5 +1,5 @@
 {
-  "fingerprint": "285d95435b3172ac6f6e0be5f8b9eda1593a68f3368f5c1be3fea15748c1bbd3",
+  "fingerprint": "fb6fbf946010d3c85bee954ec87e678a69f5bbfe07824e6a8a38170800d88359",
   "routers": {
     "deeptutor.api.routers.auth:router": [
       {
@@ -1108,6 +1108,64 @@
       {
         "path": "/knowledge-bases/{kb_name}/sync-web",
         "name": "sync_web_sources",
+        "kind": "http",
+        "methods": [
+          "POST"
+        ]
+      }
+    ],
+    "deeptutor.api.routers.obsidian:router": [
+      {
+        "path": "/obsidian/sources/{identifier}",
+        "name": "source",
+        "kind": "http",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/obsidian/note",
+        "name": "note",
+        "kind": "http",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/obsidian/asset",
+        "name": "asset",
+        "kind": "http",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/obsidian/drafts/{identifier}",
+        "name": "draft",
+        "kind": "http",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/obsidian/drafts/{identifier}/save",
+        "name": "save",
+        "kind": "http",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/obsidian/material",
+        "name": "material",
+        "kind": "http",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/obsidian/material/url",
+        "name": "material_url",
         "kind": "http",
         "methods": [
           "POST"

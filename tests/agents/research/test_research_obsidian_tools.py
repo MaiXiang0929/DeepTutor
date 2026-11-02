@@ -320,6 +320,29 @@ def test_augment_injects_vault_path_for_obsidian_tools(monkeypatch: pytest.Monke
     for tool in OBSIDIAN_TOOLS:
         kwargs = pipeline._augment_tool_kwargs(tool, {}, ctx)
         assert kwargs["_vault_path"] == "/srv/vault"
+        assert kwargs["_vault_ref"] == "vault"
+
+
+@pytest.mark.asyncio
+async def test_research_actual_read_issues_scoped_source(monkeypatch, tmp_path):
+    import json
+    from deeptutor.capabilities.obsidian.tools import ObsidianReadTool
+    from deeptutor.services import obsidian_learning as learning
+    root = tmp_path / 'vault'
+    root.mkdir()
+    (root / 'Note.md').write_text('# Evidence\nActual content', encoding='utf8')
+    _bind_kb(monkeypatch, obsidian={'vault'}, obsidian_path=str(root))
+    pipeline = _make_pipeline(monkeypatch, registry=_ToolRegistry(ALL_TOOLS), enabled_tools=[], kb_name='vault')
+    monkeypatch.setattr(learning, '_state_dir', lambda: tmp_path / 'state')
+    monkeypatch.setattr(learning, '_owner', lambda: 'reader')
+    monkeypatch.setattr(learning, '_binding', lambda kb, write=False: (root, 'immutable'))
+    kwargs = pipeline._augment_tool_kwargs('obsidian_read', {'note': 'Note', '_vault_ref': 'forged'}, UnifiedContext(user_message='read'))
+    result = await ObsidianReadTool().execute(**kwargs)
+    assert result.success
+    payload = json.loads(result.content)
+    assert payload['body'].startswith('# Evidence')
+    source = payload['references'][0]['href'].split('source=')[1].split('&')[0]
+    assert learning.source_preview(source)['kb'] == 'vault'
 
 
 def test_augment_overwrites_forged_vault_path(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -331,8 +354,9 @@ def test_augment_overwrites_forged_vault_path(monkeypatch: pytest.MonkeyPatch) -
         kb_name="vault",
     )
     ctx = UnifiedContext(session_id="s1", user_message="m")
-    kwargs = pipeline._augment_tool_kwargs("obsidian_read", {"_vault_path": "/etc"}, ctx)
+    kwargs = pipeline._augment_tool_kwargs("obsidian_read", {"_vault_path": "/etc", "_vault_ref": "forged"}, ctx)
     assert kwargs["_vault_path"] == "/srv/vault"
+    assert kwargs["_vault_ref"] == "vault"
 
 
 def test_augment_leaves_non_obsidian_tools_untouched(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -20,6 +20,14 @@ from deeptutor.capabilities.obsidian.tools import (
 )
 from deeptutor.core.context import UnifiedContext
 from deeptutor.runtime.registry.tool_registry import get_tool_registry
+from deeptutor.services import obsidian_learning as learning
+
+
+@pytest.fixture(autouse=True)
+def scoped_learning_state(tmp_path, monkeypatch):
+    monkeypatch.setattr(learning, '_state_dir', lambda: tmp_path / 'state')
+    monkeypatch.setattr(learning, '_owner', lambda: 'test-user')
+    monkeypatch.setattr(learning, '_binding', lambda kb, write=False: (tmp_path, 'test-binding'))
 
 
 def _seed_vault(root: Path) -> None:
@@ -134,7 +142,8 @@ def test_capability_active_injects_vault_path(monkeypatch, tmp_path: Path) -> No
     cap = ObsidianCapability()
     ctx = UnifiedContext(user_message="hi", knowledge_bases=["myvault"])
     assert cap.is_active(ctx) is True
-    assert tuple(cap.owned_tools) == OBSIDIAN_TOOL_NAMES
+    assert tuple(cap.owned_tools) == (*OBSIDIAN_TOOL_NAMES, 'web_fetch')
+    assert cap.augment_kwargs('obsidian_read', {'_vault_ref': 'forged'}, ctx)['_vault_ref'] == 'myvault'
     # vault path injected for obsidian tools, even overwriting a forged value...
     assert cap.augment_kwargs("obsidian_read", {}, ctx)["_vault_path"] == str(tmp_path)
     assert cap.augment_kwargs("obsidian_read", {"_vault_path": "/etc"}, ctx)["_vault_path"] == str(
@@ -176,7 +185,7 @@ async def test_tools_round_trip_against_vault(tmp_path: Path) -> None:
     hits = json.loads((await ObsidianSearchTool().execute(query="light", _vault_path=vp)).content)
     assert hits["count"] == 1
     read = json.loads(
-        (await ObsidianReadTool().execute(note="Photosynthesis", _vault_path=vp)).content
+        (await ObsidianReadTool().execute(note="Photosynthesis", _vault_path=vp, _vault_ref='test')).content
     )
     assert read["frontmatter"]["status"] == "draft"
     back = json.loads(
@@ -184,9 +193,10 @@ async def test_tools_round_trip_against_vault(tmp_path: Path) -> None:
     )
     assert back["backlinks"][0]["path"] == "Index.md"
     appended = await ObsidianAppendTool().execute(
-        note="Chlorophyll", content="line", _vault_path=vp
+        note="Chlorophyll", content="line", _vault_path=vp, _vault_ref='test'
     )
-    assert appended.success and json.loads(appended.content)["status"] == "appended"
+    assert appended.success and json.loads(appended.content)["status"] == "pending"
+    assert 'line' not in (tmp_path / 'Chlorophyll.md').read_text(encoding='utf8')
 
 
 @pytest.mark.asyncio
@@ -203,7 +213,7 @@ async def test_read_note_with_date_frontmatter(tmp_path: Path) -> None:
         "---\ntype: item-bank\ncreated: 2026-08-11\n---\n\n# Body\n\ntext\n",
         encoding="utf-8",
     )
-    res = await ObsidianReadTool().execute(note="dated.md", _vault_path=str(tmp_path))
+    res = await ObsidianReadTool().execute(note="dated.md", _vault_path=str(tmp_path), _vault_ref='test')
     assert res.success is True
     payload = json.loads(res.content)
     assert payload["frontmatter"]["created"] == "2026-08-11"
@@ -324,7 +334,7 @@ async def test_append_to_undecodable_note_explains_itself(tmp_path: Path) -> Non
     _write_undecodable(tmp_path)
 
     res = await ObsidianAppendTool().execute(
-        note="broken.md", content="x", _vault_path=str(tmp_path)
+        note="broken.md", content="x", _vault_path=str(tmp_path), _vault_ref='test'
     )
 
     assert res.success is False
@@ -338,7 +348,7 @@ async def test_datetime_frontmatter_serialises_as_iso(tmp_path: Path) -> None:
         "---\ncreated: 2026-08-11 09:30:00\n---\n\nbody\n", encoding="utf-8"
     )
 
-    res = await ObsidianReadTool().execute(note="stamped.md", _vault_path=str(tmp_path))
+    res = await ObsidianReadTool().execute(note="stamped.md", _vault_path=str(tmp_path), _vault_ref='test')
 
     assert json.loads(res.content)["frontmatter"]["created"] == "2026-08-11T09:30:00"
 
@@ -353,7 +363,7 @@ async def test_unexpected_tool_failure_names_its_cause(tmp_path: Path, monkeypat
 
     monkeypatch.setattr(V, "read_note", boom)
 
-    res = await ObsidianReadTool().execute(note="whatever", _vault_path=str(tmp_path))
+    res = await ObsidianReadTool().execute(note="whatever", _vault_path=str(tmp_path), _vault_ref='test')
 
     assert res.success is False
     assert "RuntimeError" in res.content and "disk went away" in res.content

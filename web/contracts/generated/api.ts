@@ -5372,6 +5372,125 @@ export interface paths {
     readonly patch?: never;
     readonly trace?: never;
   };
+  readonly "/api/obsidian/asset": {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    /** Asset */
+    readonly get: operations["asset_api_obsidian_asset_get"];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly "/api/obsidian/drafts/{identifier}": {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    /** Draft */
+    readonly get: operations["draft_api_obsidian_drafts__identifier__get"];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly "/api/obsidian/drafts/{identifier}/save": {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly get?: never;
+    readonly put?: never;
+    /** Save */
+    readonly post: operations["save_api_obsidian_drafts__identifier__save_post"];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly "/api/obsidian/material": {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly get?: never;
+    readonly put?: never;
+    /** Material */
+    readonly post: operations["material_api_obsidian_material_post"];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly "/api/obsidian/material/url": {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    readonly get?: never;
+    readonly put?: never;
+    /** Material Url */
+    readonly post: operations["material_url_api_obsidian_material_url_post"];
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly "/api/obsidian/note": {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    /** Note */
+    readonly get: operations["note_api_obsidian_note_get"];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
+  readonly "/api/obsidian/sources/{identifier}": {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: never;
+      readonly path?: never;
+      readonly cookie?: never;
+    };
+    /** Source */
+    readonly get: operations["source_api_obsidian_sources__identifier__get"];
+    readonly put?: never;
+    readonly post?: never;
+    readonly delete?: never;
+    readonly options?: never;
+    readonly head?: never;
+    readonly patch?: never;
+    readonly trace?: never;
+  };
   readonly "/api/partner-groups": {
     readonly parameters: {
       readonly query?: never;
@@ -12346,6 +12465,11 @@ export interface components {
        */
       readonly mime_type: string;
     };
+    /** Body_material_api_obsidian_material_post */
+    readonly Body_material_api_obsidian_material_post: {
+      /** File */
+      readonly file: string;
+    };
     /** Body_preview_office_upload_api_file_preview_pdf_post */
     readonly Body_preview_office_upload_api_file_preview_pdf_post: {
       /** File */
@@ -15020,6 +15144,17 @@ export interface components {
       /** Question Id */
       readonly question_id: string;
     };
+    /** Material */
+    readonly Material: {
+      /** Source */
+      readonly source: string;
+      /** Text */
+      readonly text: string;
+      /** Title */
+      readonly title: string;
+      /** Truncated */
+      readonly truncated: boolean;
+    };
     /** MaterialDetail */
     readonly MaterialDetail: {
       /**
@@ -15765,6 +15900,35 @@ export interface components {
       /** Record Ids */
       readonly record_ids?: readonly string[];
     };
+    /** NoteDraft */
+    readonly NoteDraft: {
+      /** Content */
+      readonly content: string;
+      /** Id */
+      readonly id: string;
+      /** Kb */
+      readonly kb: string;
+      /**
+       * Mode
+       * @enum {string}
+       */
+      readonly mode: "create" | "append" | "property";
+      /** Note Href */
+      readonly note_href?: string | null;
+      /** Path */
+      readonly path: string;
+      /** Preview Href */
+      readonly preview_href: string;
+      /** Properties */
+      readonly properties: {
+        readonly [key: string]: unknown;
+      };
+      /**
+       * Status
+       * @enum {string}
+       */
+      readonly status: "pending" | "saved";
+    };
     /**
      * NoteGeneration
      * @description The learning block on the open note page this turn fills in.
@@ -15781,6 +15945,34 @@ export interface components {
        * @default
        */
       readonly kind: string;
+    };
+    /** NoteLink */
+    readonly NoteLink: {
+      /** Href */
+      readonly href: string;
+      /** Label */
+      readonly label: string;
+    };
+    /** NotePreview */
+    readonly NotePreview: {
+      /** Body */
+      readonly body: string;
+      /** Changed */
+      readonly changed?: boolean | null;
+      /** Frontmatter */
+      readonly frontmatter: {
+        readonly [key: string]: unknown;
+      };
+      /** Heading */
+      readonly heading: string;
+      /** Kb */
+      readonly kb: string;
+      /** Links */
+      readonly links: readonly components["schemas"]["NoteLink"][];
+      /** Obsidian Uri */
+      readonly obsidian_uri: string;
+      /** Path */
+      readonly path: string;
     };
     /**
      * Occurrence
@@ -16844,6 +17036,17 @@ export interface components {
       readonly worker_count: number;
       /** Worker Id */
       readonly worker_id: string;
+    };
+    /** SaveDraft */
+    readonly SaveDraft: {
+      /** Content */
+      readonly content: string;
+      /** Path */
+      readonly path: string;
+      /** Properties */
+      readonly properties?: {
+        readonly [key: string]: unknown;
+      };
     };
     /**
      * ServerPayload
@@ -18357,6 +18560,11 @@ export interface components {
        */
       readonly workspace_title: string;
     };
+    /** UrlMaterial */
+    readonly UrlMaterial: {
+      /** Url */
+      readonly url: string;
+    };
     /** UsageStatistics */
     readonly UsageStatistics: {
       /** Active Days */
@@ -18797,6 +19005,8 @@ export type SchemaBodyImportPreviewApiQuestionNotebookPracticeImportPreviewPost 
 export type SchemaBodyImportVisualizerApiVisualizersImportPost =
   components["schemas"]["Body_import_visualizer_api_visualizers_import_post"];
 export type SchemaBodyLibraryAdd = components["schemas"]["Body_library_add"];
+export type SchemaBodyMaterialApiObsidianMaterialPost =
+  components["schemas"]["Body_material_api_obsidian_material_post"];
 export type SchemaBodyPreviewOfficeUploadApiFilePreviewPdfPost =
   components["schemas"]["Body_preview_office_upload_api_file_preview_pdf_post"];
 export type SchemaBodyReindexKnowledgeBaseApiKnowledgeBasesKbNameReindexPost =
@@ -19092,6 +19302,7 @@ export type SchemaMarkSuggestionRequest =
 export type SchemaMasteryCardAnswer =
   components["schemas"]["MasteryCardAnswer"];
 export type SchemaMasteryCardSkip = components["schemas"]["MasteryCardSkip"];
+export type SchemaMaterial = components["schemas"]["Material"];
 export type SchemaMaterialDetail = components["schemas"]["MaterialDetail"];
 export type SchemaMaterialInfo = components["schemas"]["MaterialInfo"];
 export type SchemaMcpServerConfig = components["schemas"]["MCPServerConfig"];
@@ -19123,7 +19334,10 @@ export type SchemaNotebookRecordInput =
   components["schemas"]["NotebookRecordInput"];
 export type SchemaNotebookReference =
   components["schemas"]["NotebookReference"];
+export type SchemaNoteDraft = components["schemas"]["NoteDraft"];
 export type SchemaNoteGeneration = components["schemas"]["NoteGeneration"];
+export type SchemaNoteLink = components["schemas"]["NoteLink"];
+export type SchemaNotePreview = components["schemas"]["NotePreview"];
 export type SchemaOccurrence = components["schemas"]["Occurrence"];
 export type SchemaOccurrenceList = components["schemas"]["OccurrenceList"];
 export type SchemaOrganizeNotesRequest =
@@ -19232,6 +19446,7 @@ export type SchemaRoundSummaryRequest =
   components["schemas"]["RoundSummaryRequest"];
 export type SchemaRunStartRequest = components["schemas"]["RunStartRequest"];
 export type SchemaRuntimeStatus = components["schemas"]["RuntimeStatus"];
+export type SchemaSaveDraft = components["schemas"]["SaveDraft"];
 export type SchemaServerPayload = components["schemas"]["ServerPayload"];
 export type SchemaServicePreviewPayload =
   components["schemas"]["ServicePreviewPayload"];
@@ -19357,6 +19572,7 @@ export type SchemaUpdateWorkspacePayload =
 export type SchemaUpsertEntryRequest =
   components["schemas"]["UpsertEntryRequest"];
 export type SchemaUrlImportRequest = components["schemas"]["UrlImportRequest"];
+export type SchemaUrlMaterial = components["schemas"]["UrlMaterial"];
 export type SchemaUsageStatistics = components["schemas"]["UsageStatistics"];
 export type SchemaUsageTotals = components["schemas"]["UsageTotals"];
 export type SchemaUserInfo = components["schemas"]["UserInfo"];
@@ -30889,6 +31105,264 @@ export interface operations {
         };
         content: {
           readonly "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  readonly asset_api_obsidian_asset_get: {
+    readonly parameters: {
+      readonly query: {
+        readonly kb: string;
+        readonly path: string;
+      };
+      readonly header?: {
+        readonly Authorization?: string | null;
+      };
+      readonly path?: never;
+      readonly cookie?: {
+        readonly dt_token?: string | null;
+      };
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  readonly draft_api_obsidian_drafts__identifier__get: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        readonly Authorization?: string | null;
+      };
+      readonly path: {
+        readonly identifier: string;
+      };
+      readonly cookie?: {
+        readonly dt_token?: string | null;
+      };
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["NoteDraft"];
+        };
+      };
+      /** @description Validation Error */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  readonly save_api_obsidian_drafts__identifier__save_post: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        readonly Authorization?: string | null;
+      };
+      readonly path: {
+        readonly identifier: string;
+      };
+      readonly cookie?: {
+        readonly dt_token?: string | null;
+      };
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly "application/json": components["schemas"]["SaveDraft"];
+      };
+    };
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["NoteDraft"];
+        };
+      };
+      /** @description Validation Error */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  readonly material_api_obsidian_material_post: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        readonly Authorization?: string | null;
+      };
+      readonly path?: never;
+      readonly cookie?: {
+        readonly dt_token?: string | null;
+      };
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly "multipart/form-data": components["schemas"]["Body_material_api_obsidian_material_post"];
+      };
+    };
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["Material"];
+        };
+      };
+      /** @description Validation Error */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  readonly material_url_api_obsidian_material_url_post: {
+    readonly parameters: {
+      readonly query?: never;
+      readonly header?: {
+        readonly Authorization?: string | null;
+      };
+      readonly path?: never;
+      readonly cookie?: {
+        readonly dt_token?: string | null;
+      };
+    };
+    readonly requestBody: {
+      readonly content: {
+        readonly "application/json": components["schemas"]["UrlMaterial"];
+      };
+    };
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["Material"];
+        };
+      };
+      /** @description Validation Error */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  readonly note_api_obsidian_note_get: {
+    readonly parameters: {
+      readonly query: {
+        readonly heading?: string;
+        readonly kb: string;
+        readonly note: string;
+      };
+      readonly header?: {
+        readonly Authorization?: string | null;
+      };
+      readonly path?: never;
+      readonly cookie?: {
+        readonly dt_token?: string | null;
+      };
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["NotePreview"];
+        };
+      };
+      /** @description Validation Error */
+      readonly 422: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  readonly source_api_obsidian_sources__identifier__get: {
+    readonly parameters: {
+      readonly query?: {
+        readonly heading?: string;
+      };
+      readonly header?: {
+        readonly Authorization?: string | null;
+      };
+      readonly path: {
+        readonly identifier: string;
+      };
+      readonly cookie?: {
+        readonly dt_token?: string | null;
+      };
+    };
+    readonly requestBody?: never;
+    readonly responses: {
+      /** @description Successful Response */
+      readonly 200: {
+        headers: {
+          readonly [name: string]: unknown;
+        };
+        content: {
+          readonly "application/json": components["schemas"]["NotePreview"];
         };
       };
       /** @description Validation Error */

@@ -16,6 +16,8 @@
     "deeptutor/capabilities/ima",
     "deeptutor_cli/kb.py",
     "deeptutor/api/routers/knowledge.py",
+    "deeptutor/api/routers/obsidian.py",
+    "deeptutor/services/obsidian_learning.py",
     "deeptutor/api/routers/marginnote4.py",
     "deeptutor/knowledge",
     "deeptutor/services/github_source",
@@ -132,6 +134,15 @@
   },
   "routes": [
     {
+      "reference": "deeptutor.api.routers.obsidian:router",
+      "options": {
+        "prefix": "/api",
+        "tags": ["obsidian"]
+      },
+      "auth": "learning",
+      "order": 579
+    },
+    {
       "reference": "deeptutor.api.routers.knowledge:router",
       "options": {
         "prefix": "/api",
@@ -173,6 +184,7 @@
     }
   ],
   "navigation": [
+    "/obsidian",
     "/knowledge-bases"
   ],
   "services": [
@@ -199,6 +211,7 @@
   ],
   "executables": [],
   "http_paths": [
+    "/api/obsidian",
     "/api/subagents/connections",
     "/api/settings/workspace/knowledge-bases"
   ]

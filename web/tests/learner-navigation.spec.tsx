@@ -21,6 +21,11 @@ it("keeps the full navigation for accounts without a learning policy", () => {
   expect(PRIMARY_NAV_HREFS.every((href) => navVisibleUnderPolicy(href, null))).toBe(true);
 });
 
+it("classifies standalone Obsidian previews as the chat learning surface",()=>{
+ expect(navVisibleUnderPolicy("/obsidian",["chat"])).toBe(true);
+ expect(navVisibleUnderPolicy("/obsidian",["reading"])).toBe(false);
+});
+
 it.each([undefined, [], ["reading"]])("loads policy surfaces and mirrors backend defaults for %j", async (surfaces) => {
   vi.mocked(fetchAuthStatus).mockResolvedValue({
     enabled: true,

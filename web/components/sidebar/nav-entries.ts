@@ -116,6 +116,7 @@ export function navVisibleUnderPolicy(
 ): boolean {
   if (allowedSurfaces === null) return true
   if (href === '/settings') return true
+  if (href === '/obsidian') return allowedSurfaces.includes('chat')
   const surfaces = NAV_BY_HREF.get(href)?.surfaces
   if (!surfaces?.length) return false
   return surfaces.some(surface => allowedSurfaces.includes(surface))

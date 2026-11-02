@@ -3,9 +3,8 @@
 Nine tools auto-mounted only when an Obsidian vault is the selected KB (via
 :class:`~deeptutor.capabilities.obsidian.capability.ObsidianCapability`, which
 runs the turn exclusively on these tools). Six read the vault (navigate links,
-search, read notes, list tags) and three write it additively (create / append /
-set a property). Every tool is a thin wrapper over the pure
-:mod:`deeptutor.capabilities.obsidian.vault` operations.
+search, read notes, list tags) and three stage pending drafts (create / append /
+set a property). Only the explicit HTTP save endpoint can write these drafts.
 
 The vault root is injected server-side as ``_vault_path`` by the capability's
 ``augment_kwargs`` (resolved from the selected KB's ``vault_path``); the model
@@ -21,6 +20,7 @@ from pathlib import Path
 from typing import Any
 
 from deeptutor.capabilities.obsidian import vault as vault_ops
+from deeptutor.services import obsidian_learning as learning
 from deeptutor.core.tool_protocol import BaseTool, ToolDefinition, ToolParameter, ToolResult
 
 logger = logging.getLogger(__name__)
@@ -161,7 +161,10 @@ class ObsidianReadTool(_ObsidianTool):
         ref = str(kwargs.get("note") or "").strip()
         if not ref:
             return _err("obsidian_read needs a 'note' name or path.")
-        return _ok(vault_ops.read_note(root, ref))
+        kb = str(kwargs.get("_vault_ref") or "")
+        if not kb:
+            return _err("No server-owned vault reference is available.")
+        return _ok(learning.issue_source(kb, root, ref))
 
 
 class ObsidianListTool(_ObsidianTool):
@@ -272,13 +275,13 @@ class ObsidianTagsTool(_ObsidianTool):
 
 
 class ObsidianCreateNoteTool(_ObsidianTool):
-    """Create a new note (never overwrites)."""
+    """Stage a new note for user review (never overwrites)."""
 
     def get_definition(self) -> ToolDefinition:
         return ToolDefinition(
             name="obsidian_create_note",
             description=(
-                "Create a NEW note in the vault. Fails if the path already exists "
+                "Stage a pending NEW note draft for explicit user save. No vault write occurs. Fails if the path already exists "
                 "(use obsidian_append for existing notes). Write valid Obsidian "
                 "Flavored Markdown: [[wikilinks]] for vault notes, > [!note] "
                 "callouts, ![[embeds]]. Pass structured metadata as 'properties' "
@@ -314,20 +317,20 @@ class ObsidianCreateNoteTool(_ObsidianTool):
             return _err("obsidian_create_note needs a 'path'.")
         properties = kwargs.get("properties")
         frontmatter = properties if isinstance(properties, dict) else None
-        created = vault_ops.create_note(
-            root, path, str(kwargs.get("content") or ""), frontmatter=frontmatter
-        )
-        return _ok({"status": "created", "path": created})
+        return _ok(learning.stage_draft(
+            str(kwargs.get("_vault_ref") or ""), root, "create", path,
+            str(kwargs.get("content") or ""), frontmatter,
+        ))
 
 
 class ObsidianAppendTool(_ObsidianTool):
-    """Append to an existing note."""
+    """Stage an addition to an existing note."""
 
     def get_definition(self) -> ToolDefinition:
         return ToolDefinition(
             name="obsidian_append",
             description=(
-                "Append Markdown to the end of an existing note. Use for adding to "
+                "Stage a pending append draft for explicit user save. No vault write occurs. Use for adding to "
                 "a daily note, log, or running document without rewriting it."
             ),
             parameters=[
@@ -340,18 +343,20 @@ class ObsidianAppendTool(_ObsidianTool):
         ref = str(kwargs.get("note") or "").strip()
         if not ref:
             return _err("obsidian_append needs a 'note' name or path.")
-        updated = vault_ops.append_note(root, ref, str(kwargs.get("content") or ""))
-        return _ok({"status": "appended", "path": updated})
+        return _ok(learning.stage_draft(
+            str(kwargs.get("_vault_ref") or ""), root, "append", ref,
+            str(kwargs.get("content") or ""), {},
+        ))
 
 
 class ObsidianSetPropertyTool(_ObsidianTool):
-    """Set a frontmatter property on an existing note."""
+    """Stage a frontmatter property on an existing note."""
 
     def get_definition(self) -> ToolDefinition:
         return ToolDefinition(
             name="obsidian_set_property",
             description=(
-                "Set a single frontmatter property (key/value) on an existing "
+                "Stage a pending frontmatter property draft for explicit user save on an existing "
                 "note, e.g. status, due date, or a tag list. Creates the "
                 "frontmatter block if absent; leaves the body untouched."
             ),
@@ -371,8 +376,10 @@ class ObsidianSetPropertyTool(_ObsidianTool):
         key = str(kwargs.get("key") or "").strip()
         if not ref or not key:
             return _err("obsidian_set_property needs 'note' and 'key'.")
-        updated = vault_ops.set_property(root, ref, key, kwargs.get("value"))
-        return _ok({"status": "updated", "path": updated, "key": key})
+        return _ok(learning.stage_draft(
+            str(kwargs.get("_vault_ref") or ""), root, "property", ref,
+            "", {key: kwargs.get("value")},
+        ))
 
 
 def _as_int(value: Any, *, default: int, lo: int, hi: int) -> int:

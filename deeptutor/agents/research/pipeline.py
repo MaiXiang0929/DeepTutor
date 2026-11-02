@@ -2216,6 +2216,7 @@ class ResearchPipeline:
                 # Server-owned: overwrite any model-supplied value so the path
                 # can't be forged to read outside the connected vault.
                 kwargs["_vault_path"] = self._vault_path
+                kwargs["_vault_ref"] = self.kb_name
         elif tool_name == "web_search":
             kwargs.setdefault("query", context.user_message)
             if task_dir is not None:

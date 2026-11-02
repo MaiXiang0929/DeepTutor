@@ -36,7 +36,7 @@ async def test_backlinks_include_folder_qualified_targets(tmp_path: Path, link: 
 
 @pytest.mark.asyncio
 async def test_backlinks_do_not_attribute_same_stem_to_another_note(tmp_path: Path) -> None:
-    """The link resolver chooses one note when basenames are duplicated."""
+    """Ambiguous bare links cannot be attributed to either destination."""
     for folder in ("concepts", "other"):
         target = tmp_path / folder / "Photosynthesis.md"
         target.parent.mkdir()
@@ -51,5 +51,5 @@ async def test_backlinks_do_not_attribute_same_stem_to_another_note(tmp_path: Pa
     )
 
     assert chosen.success and other.success
-    assert [item["path"] for item in json.loads(chosen.content)["backlinks"]] == ["Index.md"]
+    assert json.loads(chosen.content)["backlinks"] == []
     assert json.loads(other.content)["backlinks"] == []
