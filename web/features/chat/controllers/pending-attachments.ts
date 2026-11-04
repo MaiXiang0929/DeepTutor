@@ -6,6 +6,9 @@ import {
 } from "@/lib/file-attachments";
 
 export interface PendingAttachment {
+  /** Receipt ID used to deduplicate phone uploads; never sent to the model. */
+  captureId?: string;
+  captureTarget?: string;
   type: string;
   filename: string;
   base64?: string;
@@ -77,6 +80,8 @@ export async function fileToPendingAttachment(
   const svg = isSvgFilename(file.name) || file.type === "image/svg+xml";
   const isImage = !svg && file.type.startsWith("image/");
   return {
+    captureId: (file as File & { captureId?: string }).captureId,
+    captureTarget: (file as File & { captureTarget?: string }).captureTarget,
     type: isImage ? "image" : "file",
     filename: file.name,
     base64: extractBase64FromDataUrl(raw),

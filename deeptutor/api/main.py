@@ -516,6 +516,12 @@ from deeptutor.api.module_routes import mount_module_routes
 
 mount_module_routes(app, _router_loader)
 
+# Only phone uploads are bounded here; knowledge-base uploads retain their policy.
+from deeptutor.services.mobile_capture.receiver import BodyLimit  # noqa: E402
+from deeptutor.api.routers.mobile_capture import get_store as _capture_store  # noqa: E402
+
+app.add_middleware(BodyLimit, path_prefix="/api/mobile-capture/phone", get_store=_capture_store)
+
 
 @app.get("/")
 async def root():

@@ -7340,5 +7340,22 @@
   "Create note": "Create note",
   "Append to note": "Append to note",
   "Update properties": "Update properties",
-  "This feature is unavailable under your learning policy.": "This feature is unavailable under your learning policy."
+  "This feature is unavailable under your learning policy.": "This feature is unavailable under your learning policy.",
+  "Phone photo upload": "Phone photo upload",
+  "Receiving photos": "Receiving photos",
+  "Phone photos": "Phone photos",
+  "Scan once and upload more photo batches to this conversation.": "Scan once and upload more photo batches to this conversation.",
+  "Scan to upload phone photos": "Scan to upload phone photos",
+  "Network address": "Network address",
+  "Phone upload link": "Phone upload link",
+  "Upload link expired. Create a new QR code.": "Upload link expired. Create a new QR code.",
+  "Return to the target conversation to receive photos.": "Return to the target conversation to receive photos.",
+  "Photos added": "Photos added",
+  "Expires at": "Expires at",
+  "Use the same trusted Wi-Fi or hotspot. If connection fails, check the network address and firewall.": "Use the same trusted Wi-Fi or hotspot. If connection fails, check the network address and firewall.",
+  "Refresh QR code": "Refresh QR code",
+  "Create QR code": "Create QR code",
+  "End receiving": "End receiving",
+  "Closing this window keeps receiving. Use End receiving to disconnect.": "Closing this window keeps receiving. Use End receiving to disconnect.",
+  "Send or remove attachments on the computer to receive more photos.": "Send or remove attachments on the computer to receive more photos."
 }

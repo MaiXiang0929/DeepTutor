@@ -17,6 +17,7 @@ import {
   type KeyboardEvent,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -36,6 +37,9 @@ import type { SelectedRecord } from "@/lib/notebook-selection-types";
 import type { SelectedHistorySession } from "@/components/chat/HistorySessionPicker";
 import type { SelectedQuestionEntry } from "@/components/chat/QuestionBankPicker";
 import ChatComposer from "@/components/chat/home/ChatComposer";
+import MobileCaptureButton from "@/features/mobile-capture/components/MobileCaptureButton";
+import { useMobileCapture } from "@/features/mobile-capture/hooks/useMobileCapture";
+import { captureTargetKey, matchesTarget, phoneAttachmentsForTarget, remainingAfterSend, type CaptureTarget } from "@/features/mobile-capture/lib/routing";
 import { ChatMessageList } from "@/features/chat/messages";
 import { TurnNavigator } from "@/components/chat/home/TurnNavigator";
 import SessionLoadingView from "@/components/chat/home/SessionLoadingView";
@@ -391,6 +395,44 @@ export default function ChatWorkspace() {
   );
   const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
   const attachmentLimits = useAttachmentLimits();
+  const captureScope = useMemo(() => ({
+    workspaceId: state.workspaceId || "",
+    sessionId: sessionIdParam || state.sessionId || null,
+    sessionKey: state.sessionKey,
+    ready: !sessionIdParam || state.sessionId === sessionIdParam,
+  }), [state.workspaceId, state.sessionId, state.sessionKey, sessionIdParam]);
+  const captureScopeRef = useRef(captureScope);
+  const captureAttachmentsRef = useRef(attachments);
+  const captureLimitsRef = useRef(attachmentLimits);
+  const lastCaptureScopeRef = useRef(captureScope);
+  useLayoutEffect(() => {
+    captureScopeRef.current = captureScope;
+    captureAttachmentsRef.current = attachments;
+    captureLimitsRef.current = attachmentLimits;
+    const previous = lastCaptureScopeRef.current;
+    if (captureTargetKey(previous) !== captureTargetKey(captureScope)) {
+      const promoted = previous.workspaceId === captureScope.workspaceId &&
+        !previous.sessionId && state.boundFromKey === previous.sessionKey;
+      setAttachments(items => phoneAttachmentsForTarget(items, captureTargetKey(captureScope),
+        promoted ? captureTargetKey(previous) : undefined));
+      lastCaptureScopeRef.current = captureScope;
+    }
+  }, [captureScope, attachments, attachmentLimits, state.boundFromKey]);
+  const receivePhonePhoto = useCallback((photo: PendingAttachment, target: CaptureTarget) => {
+    if (!captureScopeRef.current.ready || !matchesTarget(target, captureScopeRef.current)) return false;
+    const current = captureAttachmentsRef.current;
+    if (photo.captureId && current.some(item => item.captureId === photo.captureId)) return true;
+    const limits = captureLimitsRef.current;
+    const size = photo.size ?? 0;
+    if (size > limits.maxFileBytes || current.reduce((sum, item) => sum + (item.size ?? 0), 0) + size > limits.maxTotalBytes) return false;
+    const next = [...current, photo];
+    captureAttachmentsRef.current = next;
+    setAttachments(next);
+    return true;
+  }, []);
+  const mobileCapture = useMobileCapture({ ...captureScope, boundFromKey: state.boundFromKey ?? null,
+    title: state.sessionTitle || t("New conversation"), onReceive: receivePhonePhoto });
+  const { consume: consumePhonePhotos, restorePhoto: restorePhonePhoto } = mobileCapture;
   const [dragging, setDragging] = useState(false);
   const [attachmentError, setAttachmentError] = useState<string | null>(null);
   const [previewSource, setPreviewSource] = useState<FilePreviewSource | null>(
@@ -1336,7 +1378,8 @@ export default function ChatWorkspace() {
     if (sessionIdParam) {
       startSessionLoad(sessionIdParam);
     } else {
-      newSession({ workspaceId: requestedWorkspaceId });
+      const key = newSession({ workspaceId: requestedWorkspaceId });
+      mobileCapture.recoverInitialDraft(key, requestedWorkspaceId || "");
     }
     return () => {
       initialLoadRef.current = false;
@@ -1616,8 +1659,10 @@ export default function ChatWorkspace() {
   );
 
   const removeAttachment = useCallback((index: number) => {
+    const photo = captureAttachmentsRef.current[index];
+    if (photo) consumePhonePhotos([photo]);
     setAttachments((prev) => prev.filter((_, i) => i !== index));
-  }, []);
+  }, [consumePhonePhotos]);
 
   const handlePreviewPendingAttachment = useCallback(
     (index: number) => {
@@ -1929,10 +1974,13 @@ export default function ChatWorkspace() {
     async (files: File[]) => {
       const accepted = filterAndReportFiles(files);
       if (!accepted.length) return;
-      const next = await Promise.all(accepted.map(fileToAttachment));
-      setAttachments((prev) => [...prev, ...next]);
+      const converted = await Promise.all(accepted.map(fileToAttachment));
+      const next = converted.map(restorePhonePhoto).filter((item): item is PendingAttachment => item !== null);
+      setAttachments((prev) => [...prev, ...next.filter(item =>
+        !item.captureId || (item.captureTarget === captureTargetKey(captureScopeRef.current) &&
+          !prev.some(existing => existing.captureId === item.captureId)))]);
     },
-    [fileToAttachment, filterAndReportFiles],
+    [fileToAttachment, filterAndReportFiles, restorePhonePhoto],
   );
 
   // Connected subagents are stored as ``type: subagent`` KBs. Derive the
@@ -2170,8 +2218,10 @@ export default function ChatWorkspace() {
           !selectedPartner &&
           !selectedPartnerGroup;
         queueMessage(messageContent, send, plainWords);
+        consumePhonePhotos(attachments);
       } else {
         sendMessage(...send);
+        consumePhonePhotos(attachments);
         setRetryingTurn(null);
       }
       setKBs(retainedKnowledgeBases(state.knowledgeBases, agentNameSet, resourceReuse.policy));
@@ -2182,7 +2232,7 @@ export default function ChatWorkspace() {
       if (!resourceReuse.policy.partner_group) setSelectedPartnerGroup(null);
       // A quote belongs to the message it was sent with, whatever the policy.
       setAttachments((prev) =>
-        resourceReuse.policy.attachments ? prev.filter((a) => !isQuoteAttachment(a)) : [],
+        remainingAfterSend(prev, attachments, resourceReuse.policy.attachments),
       );
       if (!resourceReuse.policy.books) setSelectedBookReferences([]);
       if (!resourceReuse.policy.reading) setSelectedReadingReferences([]);
@@ -2219,6 +2269,7 @@ export default function ChatWorkspace() {
       selectedQuestionEntries.length,
       sendMessage,
       queueMessage,
+      consumePhonePhotos,
       retrying,
       shouldAutoScrollRef,
       state.isStreaming,
@@ -2890,6 +2941,7 @@ export default function ChatWorkspace() {
                 <MaterialToNotes key={knowledgeBaseRef(kb)} kb={knowledgeBaseRef(kb)} onPrefill={handlePrefillComposer} />
               ))}
               <ChatComposer
+                trayEnd={<MobileCaptureButton capture={mobileCapture} />}
                 customizable
                 composerRef={composerRef}
                 capMenuRef={capMenuRef}

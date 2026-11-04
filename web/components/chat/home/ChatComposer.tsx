@@ -103,6 +103,8 @@ import { usePageCustomization } from "@/context/PageCustomizationContext";
 import { useUiLayout } from "@/hooks/useUiLayout";
 
 interface PendingAttachment {
+  captureId?: string;
+  captureTarget?: string;
   type: string;
   filename: string;
   base64?: string;
@@ -558,7 +560,7 @@ export default memo(function ChatComposer({
       // detached when the unmount cleanup runs.
       text: draftTextRef.current,
       attachments: draftAttachmentsRef.current.map(
-        ({ filename, base64, mimeType }) => ({ filename, base64, mimeType }),
+        ({ filename, base64, mimeType, captureId, captureTarget }) => ({ filename, base64, mimeType, captureId, captureTarget }),
       ),
     }),
     [],
@@ -648,9 +650,9 @@ export default memo(function ChatComposer({
               const bytes = Uint8Array.from(atob(item.base64!), (char) =>
                 char.charCodeAt(0),
               );
-              return new File([bytes], item.filename, {
+              return Object.assign(new File([bytes], item.filename, {
                 type: item.mimeType || "application/octet-stream",
-              });
+              }), { captureId: item.captureId, captureTarget: item.captureTarget });
             });
           if (files.length) addDraftFilesRef.current(files);
         })

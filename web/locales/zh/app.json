@@ -6435,5 +6435,22 @@
   "Create note": "新建笔记",
   "Append to note": "追加到笔记",
   "Update properties": "更新属性",
-  "This feature is unavailable under your learning policy.": "当前学习权限不允许使用此功能。"
+  "This feature is unavailable under your learning policy.": "当前学习权限不允许使用此功能。",
+  "Phone photo upload": "手机拍照上传",
+  "Receiving photos": "正在接收照片",
+  "Phone photos": "手机拍照",
+  "Scan once and upload more photo batches to this conversation.": "扫码连接后，可向此对话连续上传多批照片。",
+  "Scan to upload phone photos": "扫码上传手机照片",
+  "Network address": "网络地址",
+  "Phone upload link": "手机上传链接",
+  "Upload link expired. Create a new QR code.": "上传链接已过期，请生成新的二维码。",
+  "Return to the target conversation to receive photos.": "返回目标对话后继续接收照片。",
+  "Photos added": "已加入输入框",
+  "Expires at": "闲置失效时间",
+  "Use the same trusted Wi-Fi or hotspot. If connection fails, check the network address and firewall.": "请连接同一可信 Wi-Fi 或热点。连接失败时，请检查网络地址和防火墙设置。",
+  "Refresh QR code": "刷新二维码",
+  "Create QR code": "生成二维码",
+  "End receiving": "结束接收",
+  "Closing this window keeps receiving. Use End receiving to disconnect.": "收起此窗口仍会接收照片，点击“结束接收”可断开连接。",
+  "Send or remove attachments on the computer to receive more photos.": "请先在电脑上发送或移除附件，再继续接收照片。"
 }
