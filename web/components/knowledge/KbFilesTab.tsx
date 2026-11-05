@@ -14,6 +14,7 @@ import { useCollapsiblePanel } from "@/hooks/useCollapsiblePanel";
 import KbDocumentList from "./KbDocumentList";
 import KbFilePreview from "./KbFilePreview";
 import KbVisualCoverage from "./KbVisualCoverage";
+import ObsidianVaultFiles from "./ObsidianVaultFiles";
 
 interface KbFilesTabProps {
   kb: KnowledgeBase;
@@ -27,6 +28,11 @@ interface KbFilesTabProps {
  * to reclaim horizontal space for the actual preview content.
  */
 export default function KbFilesTab({ kb, task }: KbFilesTabProps) {
+  if (kb.metadata?.type === "obsidian") return <ObsidianVaultFiles kbRef={knowledgeBaseRef(kb)} />;
+  return <RawKbFilesTab kb={kb} task={task} />;
+}
+
+function RawKbFilesTab({ kb, task }: KbFilesTabProps) {
   const kbRef = knowledgeBaseRef(kb);
   const [selectedFile, setSelectedFile] = useState<KnowledgeBaseFile | null>(
     null,

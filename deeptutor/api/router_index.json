@@ -1,5 +1,5 @@
 {
-  "fingerprint": "55dcd3afeb669bafaa876901f6934ea5314614363fa259d7c5ab922543a767fa",
+  "fingerprint": "a0b2223560f4a3a7d387664dd0dddda3bb133942c1a4cd6da846d2b81957bf73",
   "routers": {
     "deeptutor.api.routers.auth:router": [
       {
@@ -1158,6 +1158,38 @@
       {
         "path": "/obsidian/material",
         "name": "material",
+        "kind": "http",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/obsidian/changes",
+        "name": "changes",
+        "kind": "http",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/obsidian/notes",
+        "name": "notes",
+        "kind": "http",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/obsidian/link-suggestions",
+        "name": "link_suggestions",
+        "kind": "http",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/obsidian/link-draft",
+        "name": "link_draft",
         "kind": "http",
         "methods": [
           "POST"

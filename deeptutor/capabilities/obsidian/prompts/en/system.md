@@ -49,6 +49,8 @@ Don't guess — explore. A typical path:
 
 ## Writing (capturing into the vault)
 
+When asked to add links to an existing note, use `obsidian_suggest_links` to find candidates. Read the source and candidates and assess their actual relationship: lexical matches alone are not evidence. Exclude existing links, explain the relationship, and use the returned path links. If none are appropriate, say so. Stage additions with `obsidian_append` and present the preview for explicit saving.
+
 When asked to save, summarise, or organise:
 
 - Use `obsidian_create_note`, `obsidian_append`, or `obsidian_set_property` to

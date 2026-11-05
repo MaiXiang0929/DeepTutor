@@ -57,6 +57,49 @@ def test_http_contract_and_material(env):
     )
 
 
+def test_vault_notes_list_reflects_new_files_and_skips_internal_dirs(env):
+    root, client = env
+    (root / '.obsidian').mkdir()
+    (root / '.obsidian' / 'hidden.md').write_text('hidden', encoding='utf8')
+    first = client.get('/api/obsidian/notes', params={'kb': 'kb'})
+    assert first.status_code == 200
+    assert [x['path'] for x in first.json()['notes']] == ['Note.md']
+    (root / 'folder').mkdir()
+    (root / 'folder' / '新.md').write_text('new', encoding='utf8')
+    second = client.get('/api/obsidian/notes', params={'kb': 'kb'}).json()
+    assert {x['path'] for x in second['notes']} == {'Note.md', 'folder/新.md'}
+    assert all(isinstance(x['modified'], (int, float)) for x in second['notes'])
+
+
+def test_link_update_creates_reviewable_draft(env):
+    root, client = env
+    (root / 'Note.md').write_text('rendering surface lighting', encoding='utf8')
+    (root / 'Related.md').write_text('rendering surface lighting', encoding='utf8')
+    response = client.get('/api/obsidian/link-suggestions', params={'kb': 'kb', 'note': 'Note.md'})
+    assert response.status_code == 200
+    assert response.json()['candidates'][0]['path'] == 'Related.md'
+    draft = client.post('/api/obsidian/link-draft', json={'kb': 'kb', 'note': 'Note.md', 'paths': ['Related.md']})
+    assert draft.status_code == 200
+    assert '[[Related.md]]' in draft.json()['content']
+    assert (root / 'Note.md').read_text(encoding='utf8') == 'rendering surface lighting'
+    saved = client.post(f"/api/obsidian/drafts/{draft.json()['id']}/save", json={'path': 'Note.md', 'content': draft.json()['content'], 'properties': draft.json()['properties']})
+    assert saved.status_code == 200
+    assert '[[Related.md]]' in (root / 'Note.md').read_text(encoding='utf8')
+
+
+def test_link_draft_rejects_deleted_target_and_unlisted_path(env):
+    root, client = env
+    (root / 'Note.md').write_text('rendering surface lighting', encoding='utf8')
+    related = root / 'Related.md'
+    related.write_text('rendering surface lighting', encoding='utf8')
+    assert client.post('/api/obsidian/link-draft', json={'kb': 'kb', 'note': 'Note.md', 'paths': ['../outside.md']}).status_code == 409
+    draft = client.post('/api/obsidian/link-draft', json={'kb': 'kb', 'note': 'Note.md', 'paths': ['Related.md']}).json()
+    related.unlink()
+    result = client.post(f"/api/obsidian/drafts/{draft['id']}/save", json={'path': draft['path'], 'content': draft['content'], 'properties': draft['properties']})
+    assert result.status_code == 409
+    assert (root / 'Note.md').read_text(encoding='utf8') == 'rendering surface lighting'
+
+
 def test_revoked_access_and_readonly_cannot_stage_or_save(env, monkeypatch):
     root, client = env
     source = (

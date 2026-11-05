@@ -257,7 +257,7 @@ def _public(row):
     return {k: row[k] for k in keys if k in row}
 
 
-def stage_draft(kb, root, mode, note, content, properties=None):
+def stage_draft(kb, root, mode, note, content, properties=None, link_targets=None):
     if not kb:
         raise LearningError("No server-owned vault reference is available.")
     if len(content) > MAX_TEXT:
@@ -304,8 +304,40 @@ def stage_draft(kb, root, mode, note, content, properties=None):
         "status": "pending",
         "preview_href": workspace_url("/obsidian?" + urlencode({"draft": identifier})),
     }
+    if link_targets is not None:
+        row["_link_targets"] = link_targets
     _store(row)
     return _public(row)
+
+
+def list_vault_notes(kb):
+    root, _ = _binding(kb)
+    notes = []
+    for path in V._iter_markdown(root):
+        try:
+            notes.append({"path": path.relative_to(root.resolve()).as_posix(), "modified": path.stat().st_mtime})
+        except OSError:
+            continue
+    return {"notes": notes}
+
+
+def link_suggestions(kb, note):
+    from deeptutor.capabilities.obsidian.link_suggestions import suggest_links
+
+    root, _ = _binding(kb)
+    return {"candidates": suggest_links(root, note)}
+
+
+def stage_link_draft(kb, note, paths):
+    from deeptutor.capabilities.obsidian.link_suggestions import suggest_links
+
+    root, _ = _binding(kb, True)
+    candidates = {item["path"]: item for item in suggest_links(root, note, limit=30)}
+    selected = list(dict.fromkeys(paths))
+    if not selected or any(path not in candidates for path in selected):
+        raise LearningError("Suggestions changed; refresh them before preparing a draft.", 409)
+    content = "\n## 相关笔记\n\n" + "\n".join(f"- {candidates[path]['link']}" for path in selected) + "\n"
+    return stage_draft(kb, root, "append", note, content, link_targets=selected)
 
 
 def get_draft(identifier):
@@ -325,6 +357,9 @@ def save_draft(identifier, path, content, properties):
         root = _bound(row, True)  # Recheck access even for an idempotent repeat.
         if row["status"] == "saved":
             return _public(row)
+        for ref in row.get("_link_targets", []):
+            if not _safe(root, ref, True).is_file():
+                raise LearningError("A related note no longer exists; prepare a new draft.", 409)
         if "_intent" in row:
             previous = _safe(root, row["path"], True)
             previous_digest = _digest(previous.read_bytes()) if previous.exists() else None

@@ -18,6 +18,7 @@
     "deeptutor/api/routers/knowledge.py",
     "deeptutor/api/routers/obsidian.py",
     "deeptutor/services/obsidian_learning.py",
+    "deeptutor/services/obsidian_changes.py",
     "deeptutor/api/routers/marginnote4.py",
     "deeptutor/knowledge",
     "deeptutor/services/github_source",
@@ -49,6 +50,10 @@
     },
     "obsidian_search": {
       "class_path": "deeptutor.capabilities.obsidian.tools:ObsidianSearchTool",
+      "order": 63
+    },
+    "obsidian_suggest_links": {
+      "class_path": "deeptutor.capabilities.obsidian.tools:ObsidianSuggestLinksTool",
       "order": 63
     },
     "obsidian_read": {

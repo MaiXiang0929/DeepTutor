@@ -5,7 +5,7 @@ This module is the *only* place that knows Obsidian's on-disk conventions:
 * notes are ``.md`` files anywhere under the vault root;
 * metadata is YAML frontmatter fenced by ``---`` at the top of a note;
 * links are ``[[wikilinks]]`` (optionally ``[[Note#heading|alias]]``);
-* ``.obsidian`` / ``.trash`` / ``.git`` are vault internals to ignore.
+* dot-prefixed files and folders are hidden vault internals to ignore.
 
 Every function takes the vault root explicitly and returns plain data — no
 dependency on the chat loop, tools, or capability machinery, so it is trivial
@@ -43,7 +43,7 @@ class VaultError(Exception):
 
 
 def _is_ignored(rel: Path) -> bool:
-    return any(part.casefold() in IGNORED_DIRS for part in rel.parts)
+    return any(part.startswith('.') or part.casefold() in IGNORED_DIRS for part in rel.parts)
 
 
 def _iter_markdown(root: Path, base: Path | None = None):
@@ -56,7 +56,7 @@ def _iter_markdown(root: Path, base: Path | None = None):
         dirs[:] = sorted(
             name
             for name in dirs
-            if name.casefold() not in IGNORED_DIRS
+            if not name.startswith('.') and name.casefold() not in IGNORED_DIRS
             and not (Path(directory) / name).is_symlink()
             and not (
                 getattr((Path(directory) / name).lstat(), "st_file_attributes", 0)
@@ -64,7 +64,7 @@ def _iter_markdown(root: Path, base: Path | None = None):
             )
         )
         for name in files:
-            if not name.lower().endswith(".md"):
+            if name.startswith('.') or not name.lower().endswith(".md"):
                 continue
             path = Path(directory) / name
             try:

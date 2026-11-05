@@ -20,8 +20,8 @@ from pathlib import Path
 from typing import Any
 
 from deeptutor.capabilities.obsidian import vault as vault_ops
-from deeptutor.services import obsidian_learning as learning
 from deeptutor.core.tool_protocol import BaseTool, ToolDefinition, ToolParameter, ToolResult
+from deeptutor.services import obsidian_learning as learning
 
 logger = logging.getLogger(__name__)
 
@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 # truth so the mount policy and the registration list can't disagree.
 OBSIDIAN_TOOL_NAMES: tuple[str, ...] = (
     "obsidian_search",
+    "obsidian_suggest_links",
     "obsidian_read",
     "obsidian_list",
     "obsidian_backlinks",
@@ -103,6 +104,25 @@ class _ObsidianTool(BaseTool):
 
     async def _run(self, root: Path, kwargs: dict[str, Any]) -> ToolResult:  # pragma: no cover
         raise NotImplementedError
+
+
+class ObsidianSuggestLinksTool(_ObsidianTool):
+    """Find lexical candidates; the agent must read and evaluate them."""
+
+    def get_definition(self) -> ToolDefinition:
+        return ToolDefinition(
+            name="obsidian_suggest_links",
+            description="Find candidate related notes for an existing note. These are lexical matches, not verified relationships; read candidates before recommending links.",
+            parameters=[ToolParameter(name="note", type="string", description="Existing note name or vault-relative path.")],
+        )
+
+    async def _run(self, root: Path, kwargs: dict[str, Any]) -> ToolResult:
+        from deeptutor.capabilities.obsidian.link_suggestions import suggest_links
+
+        note = str(kwargs.get("note") or "").strip()
+        if not note:
+            return _err("obsidian_suggest_links needs a note.")
+        return _ok({"note": note, "candidates": suggest_links(root, note)})
 
 
 class ObsidianSearchTool(_ObsidianTool):
@@ -391,6 +411,7 @@ def _as_int(value: Any, *, default: int, lo: int, hi: int) -> int:
 
 
 OBSIDIAN_TOOL_TYPES: tuple[type[BaseTool], ...] = (
+    ObsidianSuggestLinksTool,
     ObsidianSearchTool,
     ObsidianReadTool,
     ObsidianListTool,

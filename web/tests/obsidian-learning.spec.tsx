@@ -69,6 +69,19 @@ describe('Obsidian learning', () => {
       expect.stringContaining('obsidian://')
     )
   })
+  it('offers link candidates and prepares a draft for selected notes', async () => {
+    const fetcher = vi.fn()
+      .mockResolvedValueOnce(new Response(JSON.stringify({ kb: 'ta', path: 'a.md', body: 'body', frontmatter: {}, heading: '', obsidian_uri: '', links: [] })))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ candidates: [{ path: 'b.md', link: '[[b.md]]', shared_terms: ['rendering'], score: 2 }] })))
+      .mockResolvedValueOnce(new Response(JSON.stringify({ ...draft, mode: 'append', content: '\n## 相关笔记\n- [[b.md]]' })))
+    vi.stubGlobal('fetch', fetcher)
+    render(<ObsidianPreview target={{ kb: 'ta', note: 'a.md' }} />)
+    fireEvent.click(await screen.findByRole('button', { name: '更新双链' }))
+    fireEvent.click(await screen.findByRole('checkbox', { name: /b\.md/ }))
+    fireEvent.click(screen.getByRole('button', { name: '生成双链草稿' }))
+    expect(await screen.findByLabelText('Note content')).toHaveValue('\n## 相关笔记\n- [[b.md]]')
+    expect(JSON.parse(fetcher.mock.calls[2][1].body).paths).toEqual(['b.md'])
+  })
   it('retains edited draft after failed save and disables duplicate save after success', async () => {
     const fetcher = vi
       .fn()

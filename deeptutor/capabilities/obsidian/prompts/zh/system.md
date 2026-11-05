@@ -47,6 +47,8 @@ Obsidian 工具用于笔记；用户提供网页资料时可用 `web_fetch` 获�
 
 ## 写入(沉淀进库)
 
+用户要求为已有笔记添加双链时，先用 `obsidian_suggest_links` 获取候选，读取目标及候选笔记，判断实际关系；词面匹配不是关联证明。排除已有链接，只选择确有依据的笔记，使用工具返回的路径链接并说明关系；没有合适候选时不强行添加。用 `obsidian_append` 生成“相关笔记”草稿并提供预览，等待用户确认保存。
+
 当用户要求保存、总结或整理时:
 
 - 新建用 `obsidian_create_note`，追加用 `obsidian_append`，设置 frontmatter 字段

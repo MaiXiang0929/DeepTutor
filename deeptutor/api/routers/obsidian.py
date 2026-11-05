@@ -106,6 +106,34 @@ async def material(file: UploadFile = File(...)):
     return await _call(learning.extract_material, file.filename or "material.txt", data)
 
 
+@router.get("/changes")
+async def changes(kb: str):
+    from deeptutor.services.obsidian_changes import scan_changes
+
+    return await _call(scan_changes, kb)
+
+
+@router.get("/notes")
+async def notes(kb: str):
+    return await _call(learning.list_vault_notes, kb)
+
+
+@router.get("/link-suggestions")
+async def link_suggestions(kb: str, note: str):
+    return await _call(learning.link_suggestions, kb, note)
+
+
+class LinkDraft(BaseModel):
+    kb: str
+    note: str
+    paths: list[str] = Field(min_length=1, max_length=30)
+
+
+@router.post("/link-draft", response_model=NoteDraft, response_model_exclude_none=True)
+async def link_draft(body: LinkDraft):
+    return await _call(learning.stage_link_draft, body.kb, body.note, body.paths)
+
+
 class UrlMaterial(BaseModel):
     url: str = Field(max_length=8192)
 

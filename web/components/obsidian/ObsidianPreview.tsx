@@ -15,6 +15,7 @@ import {
 
 const fieldClass =
   'block w-full rounded border border-[var(--border)] bg-[var(--background)] p-2 text-[var(--foreground)]'
+type LinkCandidate = { path: string; link: string; shared_terms: string[]; score: number }
 export function ObsidianPreview({ target }: { target: ObsidianTarget }) {
   const { t } = useTranslation()
   const [data, setData] = useState<NotePreview | NoteDraft | null>(null)
@@ -25,6 +26,9 @@ export function ObsidianPreview({ target }: { target: ObsidianTarget }) {
   const [properties, setProperties] = useState('')
   const [preview, setPreview] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [candidates, setCandidates] = useState<LinkCandidate[] | null>(null)
+  const [selected, setSelected] = useState<string[]>([])
+  const [loadingLinks, setLoadingLinks] = useState(false)
   const body = useRef<HTMLDivElement>(null)
   const endpoint = previewEndpoint(target)
   useEffect(() => {
@@ -92,6 +96,39 @@ export function ObsidianPreview({ target }: { target: ObsidianTarget }) {
     } finally {
       setSaving(false)
     }
+  }
+  async function updateLinks() {
+    if (!data || 'id' in data || loadingLinks) return
+    setLoadingLinks(true)
+    setError('')
+    setSelected([])
+    try {
+      const query = new URLSearchParams({ kb: data.kb, note: data.path })
+      const result = await obsidianRequest<{ candidates: LinkCandidate[] }>(
+        obsidianWorkspaceUrl(`/api/obsidian/link-suggestions?${query}`, target.workspace)
+      )
+      setCandidates(result.candidates)
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason))
+    } finally { setLoadingLinks(false) }
+  }
+  async function prepareLinks() {
+    if (!data || 'id' in data || !selected.length || loadingLinks) return
+    setLoadingLinks(true)
+    setError('')
+    try {
+      const result = await obsidianRequest<NoteDraft>(obsidianWorkspaceUrl('/api/obsidian/link-draft', target.workspace), {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kb: data.kb, note: data.path, paths: selected }),
+      })
+      setData(result)
+      setPath(result.path)
+      setContent(result.content)
+      setProperties(JSON.stringify(result.properties, null, 2))
+      setPreview(true)
+    } catch (reason) {
+      setError(reason instanceof Error ? reason.message : String(reason))
+    } finally { setLoadingLinks(false) }
   }
   if (!data)
     return (
@@ -201,6 +238,24 @@ export function ObsidianPreview({ target }: { target: ObsidianTarget }) {
         </>
       ) : (
         <>
+          <button type="button" className="rounded border px-3 py-2" onClick={updateLinks} disabled={loadingLinks}>
+            {loadingLinks ? '正在查找…' : '更新双链'}
+          </button>
+          {candidates && (
+            <section className="space-y-2" aria-label="双链候选">
+              <p>按内容相似度查找的候选，请检查相关性后选择。</p>
+              {candidates.length === 0 && <p>没有找到新的候选笔记。</p>}
+              {candidates.map(candidate => (
+                <label key={candidate.path} className="block">
+                  <input type="checkbox" checked={selected.includes(candidate.path)}
+                    onChange={event => setSelected(current => event.target.checked ? [...current, candidate.path] : current.filter(path => path !== candidate.path))} />{' '}
+                  {candidate.path}
+                  <span className="ml-2 text-sm">（共同词：{candidate.shared_terms.join('、')}）</span>
+                </label>
+              ))}
+              {candidates.length > 0 && <button type="button" className="rounded border px-3 py-2" disabled={!selected.length || loadingLinks} onClick={prepareLinks}>生成双链草稿</button>}
+            </section>
+          )}
           {data.changed && (
             <p role="status">
               {t('This note changed since it was cited. Showing the current version.')}
