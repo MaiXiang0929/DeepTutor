@@ -1,3 +1,4 @@
+import { presentReward } from "@/shared/companion/rewards";
 import type {
   ClientCommand,
   ServerEvent,
@@ -99,6 +100,9 @@ export class UnifiedTurnClient {
     this.runtime = new TurnRuntimeClient({
       onEvent(event) {
         const streamEvent = toStreamEvent(event);
+        if (streamEvent?.type === "done") {
+          presentReward(streamEvent.metadata.gamification_reward, streamEvent.turn_id);
+        }
         if (streamEvent) onEvent(streamEvent);
       },
       onStateChange: (state) => {

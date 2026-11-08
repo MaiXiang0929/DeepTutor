@@ -1,5 +1,6 @@
 import { scopedUrl } from '@/lib/workspace-scope'
 import { apiFetch, apiUrl } from '@/lib/api'
+import { presentReward } from '@/shared/companion/rewards'
 import type { NotebookEntry } from '@/lib/notebook-api'
 
 const ROOT = '/api/question-notebook/practice'
@@ -97,11 +98,14 @@ export const savePracticeReview = (
   },
   workspaceId?: string
 ) =>
-  request<{ due_at: number; correct: boolean | null; rating: PracticeRating; is_mistake: boolean }>(
+  request<{ due_at: number; correct: boolean | null; rating: PracticeRating; is_mistake: boolean; gamification_reward?: unknown }>(
     `/questions/${id}/review`,
     json(body),
     workspaceId
-  )
+  ).then(result => {
+    presentReward(result.gamification_reward, body.request_id)
+    return result
+  })
 export function previewPracticeImport(file: File, target: 'bank' | 'mistakes') {
   const data = new FormData()
   data.append('file', file)

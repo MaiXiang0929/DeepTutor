@@ -50,6 +50,9 @@ export async function stageWeb(sourcePath, cachePath) {
     },
   });
   await symlink(path.join(source, 'node_modules'), path.join(target, 'node_modules'), WINDOWS ? 'junction' : 'dir');
+  const protocol = path.join('packages', 'shared-protocol');
+  await mkdir(path.join(cachePath, 'packages'), { recursive: true });
+  await cp(path.join(sourcePath, protocol), path.join(cachePath, protocol), { recursive: true });
   // Next's version display reads this sibling file. It is a disposable runtime cache.
   await mkdir(path.join(cachePath, 'deeptutor'), { recursive: true });
   await cp(path.join(sourcePath, 'deeptutor', '__version__.py'), path.join(cachePath, 'deeptutor', '__version__.py'));

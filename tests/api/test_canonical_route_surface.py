@@ -18,6 +18,9 @@ def test_only_canonical_transport_and_resource_routes_are_registered() -> None:
         "/api/personas",
         "/api/sessions",
         "/api/system/runtime",
+        "/api/v1/gamification/profile",
+        "/api/v1/gamification/synthesize",
+        "/api/v1/gamification/equip",
         "/files/attachments/{session_id}/{attachment_id}/{filename:path}",
         "/files/outputs/{output_path:path}",
         "/ws",
@@ -40,6 +43,14 @@ def test_only_canonical_transport_and_resource_routes_are_registered() -> None:
         path
         for path in paths
         if any(path == prefix or path.startswith(prefix + "/") for prefix in retired_prefixes)
+        and not path.startswith(
+            (
+                "/api/v1/gamification/",
+                "/api/v1/companion/",
+                "/api/v1/trade/",
+                "/api/v1/game-guardian/",
+            )
+        )
     }
     assert "/api/system/runtime-topology" not in paths
 

@@ -11,6 +11,7 @@ import {
   inputClass,
 } from "@/components/settings/shared";
 import { useSettings } from "@/features/settings/store/SettingsStore";
+import { CloudWorkspaceSetting } from "./CloudWorkspaceSetting";
 import { apiFetch, apiUrl } from "@/lib/api";
 import {
   RuntimeHealthCard,
@@ -216,6 +217,8 @@ export default function NetworkSettingsPage() {
       <p className="mb-7 text-[12px] text-[var(--muted-foreground)]">
         {t("Network changes take effect after restart.")}
       </p>
+
+      <CloudWorkspaceSetting />
 
       <div className="mb-7">
         <RuntimeHealthCard

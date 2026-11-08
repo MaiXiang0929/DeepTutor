@@ -50,6 +50,23 @@ async def unified_websocket(ws: WebSocket) -> None:
     if user_token is ws_auth_failed:
         return
 
+    trade_id = getattr(ws, "query_params", {}).get("trade_session_id")
+    if trade_id:
+        from deeptutor.api.routers.nfc_trade import trade_websocket
+        from deeptutor.multi_user.context import get_current_user
+
+        try:
+            await trade_websocket(ws, trade_id, get_current_user().id)
+        finally:
+            if user_token is not None:
+                reset_current_user(user_token)
+        return
+
+    from deeptutor.services.gamification.reward_hook import allows_learning_reward, desktop_request
+
+    desktop_token = desktop_request.set(
+        allows_learning_reward(getattr(ws, "headers", {}).get("user-agent", ""), web_learning=True)
+    )
     await ws.accept()
     closed = False
     subscription_tasks: dict[str, asyncio.Task[None]] = {}
@@ -381,5 +398,6 @@ async def unified_websocket(ws: WebSocket) -> None:
         closed = True
         for key in list(subscription_tasks):
             await stop_subscription(key)
+        desktop_request.reset(desktop_token)
         if user_token is not None:
             reset_current_user(user_token)

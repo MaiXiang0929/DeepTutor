@@ -7,6 +7,7 @@ from collections.abc import Callable
 import contextlib
 from contextvars import Token
 import logging
+from time import monotonic
 from typing import TYPE_CHECKING, Any
 
 from deeptutor.core.stream import StreamEvent, StreamEventType
@@ -140,6 +141,7 @@ class TurnExecutor:
 
     @workspace_writer
     async def _run_turn(self, execution: _TurnExecution) -> None:
+        study_started = monotonic()
         payload = execution.payload
         session_id = execution.session_id
         capability_name = execution.capability
@@ -1302,6 +1304,41 @@ class TurnExecutor:
             if not transitioned:
                 execution.lease_lost = True
                 raise asyncio.CancelledError
+            if turn_status == "completed":
+                # The learning WebSocket adapter marks this context. Reward
+                # after the terminal transition, but before publishing DONE.
+                try:
+                    from deeptutor.multi_user.context import get_current_user
+                    from deeptutor.services.gamification.reward_hook import (
+                        desktop_request,
+                        on_capability_turn_completed,
+                    )
+
+                    if desktop_request.get():
+                        reward = await on_capability_turn_completed(
+                            get_current_user().id, capability_name,
+                            {"desktop": True, "turn_id": turn_id},
+                        )
+                        if reward is not None:
+                            pending_done_event.metadata["gamification_reward"] = reward
+                            from deeptutor.modules.catalog import module_enabled
+
+                            if module_enabled("memory"):
+                                from deeptutor.services.memory import get_memory_store
+                                from deeptutor.services.memory.trace import TraceEvent
+
+                                surface = "book" if capability_name == "immersive_reading" else "chat"
+                                await get_memory_store().emit(TraceEvent.new(
+                                    surface, "study_completed", {
+                                        "topic": " ".join(raw_user_content.split())[:120],
+                                        "capability": capability_name,
+                                        "duration_seconds": int(monotonic() - study_started),
+                                        "reward": reward,
+                                    },
+                                    session_id=session_id, turn_id=turn_id,
+                                ))
+                except Exception:
+                    logger.warning("Gamification reward failed for turn %s", turn_id, exc_info=True)
             await self._publish_live_event(execution, pending_done_event)
             stream_done_sent = True
             await self._flush_buffered_events(execution)

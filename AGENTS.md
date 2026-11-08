@@ -144,6 +144,34 @@ setup, but still need the full Python dependencies. Follow
 | `deeptutor_cli/main.py`                    | Typer CLI entry point                |
 | `deeptutor/api/routers/unified_ws.py`      | Unified WebSocket endpoint           |
 | `apps/desktop/`                            | Open DeepTutor desktop apps for MacOS and Windows (Electron shell + bundled core; per-target builds in `platforms/`) |
+| `deeptutor/services/gamification/` | Account-scoped energy, inventory, recipes, proximity trades, minigames and guardian limits |
+| `deeptutor/api/routers/gamification.py` | Profile, catalog, synthesis, equip and game endpoints under `/api/v1/gamification` |
+| `deeptutor/api/routers/nfc_trade.py` | Signed pairing, participant-only `/ws?trade_session_id=…` rooms and shared quizzes |
+| `deeptutor/api/routers/companion.py` | Mobile greetings, scoped memory notes, Partner presets and Voice playback |
+| `deeptutor/api/routers/game_guardian.py` | Guardian-authorized game limits and aggregate reports |
+| `packages/shared-protocol/` | TypeScript DTOs for Web and Expo clients |
+| `apps/mobile/` | Expo companion app with Rive, voice, Skia minigames, inventory and guardian controls |
+| `apps/mobile/modules/proximity-advertiser/` | Native Android HCE and Android/iOS BLE advertising for proximity trades |
+
+## Study Rewards and Mobile Builds
+
+Completed learning turns and Practice can grant account-scoped energy and a
+subject fragment. Web, desktop and mobile clients share inventory and Partner
+greetings when connected to the same backend with the same account. Pairing
+uses a short-lived token, and trade settlement requires both users to confirm.
+
+On Windows, run `.\.venv\Scripts\deeptutor.exe start --dev --detach` from
+the repository root to start the API and Web UI. Run `npm start -- --lan`
+from `apps/mobile` for the Debug client. Enter the API origin on the in-app
+connection screen. If the backend has authentication enabled, use its Web
+account credentials.
+
+From `apps/mobile`, run `npm ci` and `npx expo prebuild --platform android`.
+From the generated Android directory, run
+`.\gradlew.bat :app:assembleDebug :app:assembleRelease` with JDK 17 and the
+Android SDK installed. The local Release build embeds JS and uses the Debug
+key for device testing. See the [mobile README](apps/mobile/README.md) for APK
+locations, LAN setup and device acceptance.
 
 ## Dependency Layers
 

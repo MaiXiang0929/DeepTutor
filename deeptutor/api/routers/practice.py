@@ -10,7 +10,7 @@ from typing import Literal
 import zipfile
 
 from defusedxml.ElementTree import ParseError
-from fastapi import APIRouter, File, Form, HTTPException, Query, Response, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Query, Request, Response, UploadFile
 from pydantic import BaseModel, Field
 
 from deeptutor.services.practice.answers import check_answer
@@ -164,9 +164,9 @@ async def check(entry_id: int, payload: AnswerRequest):
 
 
 @router.post("/questions/{entry_id}/review")
-async def review(entry_id: int, payload: ReviewRequest):
+async def review(entry_id: int, payload: ReviewRequest, request: Request):
     try:
-        return await asyncio.to_thread(
+        result = await asyncio.to_thread(
             PracticeStore(get_sqlite_session_store().db_path).review,
             entry_id,
             payload.request_id,
@@ -175,6 +175,37 @@ async def review(entry_id: int, payload: ReviewRequest):
             payload.answer,
             self_report=payload.self_report,
         )
+        from deeptutor.services.gamification.reward_hook import (
+            allows_learning_reward,
+            on_capability_turn_completed,
+        )
+        if allows_learning_reward(request.headers.get("user-agent", ""), web_learning=True):
+            import logging
+
+            from deeptutor.multi_user.context import get_current_user
+
+            try:
+                reward = await on_capability_turn_completed(
+                    get_current_user().id, "practice",
+                    {"desktop": True, "turn_id": payload.request_id},
+                )
+                if reward is not None:
+                    result["gamification_reward"] = reward
+                    from deeptutor.modules.catalog import module_enabled
+
+                    if module_enabled("memory"):
+                        from deeptutor.services.memory import get_memory_store
+                        from deeptutor.services.memory.trace import TraceEvent
+
+                        await get_memory_store().emit(TraceEvent.new(
+                            "quiz", "study_completed", {
+                                "topic": "Practice", "capability": "practice", "reward": reward,
+                            },
+                            turn_id=payload.request_id,
+                        ))
+            except Exception:
+                logging.getLogger(__name__).warning("Practice reward failed", exc_info=True)
+        return result
     except LookupError as exc:
         raise HTTPException(404, str(exc)) from exc
     except ReviewConflict as exc:

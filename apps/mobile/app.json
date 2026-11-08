@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "DeepTutor Companion",
+    "slug": "deeptutor-companion",
+    "version": "0.1.0",
+    "scheme": "deeptutor-companion",
+    "newArchEnabled": true,
+    "ios": {
+      "bundleIdentifier": "org.deeptutor.companion"
+    },
+    "android": {
+      "package": "org.deeptutor.companion",
+      "permissions": [
+        "android.permission.BLUETOOTH_ADVERTISE",
+        "android.permission.BLUETOOTH_CONNECT",
+        "android.permission.BLUETOOTH_SCAN",
+        "android.permission.NFC"
+      ]
+    },
+    "plugins": [
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow DeepTutor Companion to record your message."
+        }
+      ],
+      [
+        "react-native-nfc-manager",
+        {
+          "nfcPermission": "Read a nearby DeepTutor trade code.",
+          "selectIdentifiers": [
+            "D2760000850101"
+          ]
+        }
+      ],
+      [
+        "react-native-ble-plx",
+        {
+          "isBackgroundEnabled": false,
+          "bluetoothAlwaysPermission": "Connect to nearby DeepTutor trade devices."
+        }
+      ],
+      "./plugins/withTradeHce.js",
+      "./plugins/withGradleMirrors.js"
+    ]
+  }
+}

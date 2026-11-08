@@ -1,0 +1,39 @@
+{
+  "name": "@deeptutor/mobile",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start --dev-client",
+    "android": "expo run:android",
+    "typecheck": "tsc --noEmit",
+    "test": "node --experimental-strip-types --test tests/*.test.ts",
+    "ios": "expo run:ios"
+  },
+  "dependencies": {
+    "@deeptutor/shared-protocol": "file:../../packages/shared-protocol",
+    "@rive-app/react-native": "0.5.12",
+    "@shopify/react-native-skia": "2.2.12",
+    "expo": "~54.0.38",
+    "expo-asset": "12.0.14",
+    "expo-audio": "~1.1.1",
+    "expo-dev-client": "~6.0.20",
+    "expo-file-system": "~19.0.21",
+    "expo-haptics": "~15.0.8",
+    "react": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-ble-plx": "3.5.1",
+    "react-native-gesture-handler": "~2.28.0",
+    "react-native-nfc-manager": "4.2.0",
+    "react-native-nitro-modules": "~0.35.10",
+    "react-native-reanimated": "~4.1.1",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
+    "react-native-worklets": "0.5.1"
+  },
+  "devDependencies": {
+    "@types/react": "~19.1.0",
+    "babel-preset-expo": "~54.0.12",
+    "typescript": "~5.9.2"
+  }
+}

@@ -13,6 +13,12 @@
   "tools": {},
   "routes": [
     {
+      "reference": "deeptutor.api.routers.nfc_trade:router",
+      "options": {"prefix": "/api/v1/trade", "tags": ["nfc-trade"]},
+      "auth": "authenticated",
+      "order": 602
+    },
+    {
       "reference": "deeptutor.api.routers.mobile_capture:router",
       "options": {"prefix": "/api/mobile-capture", "tags": ["mobile-capture"]},
       "auth": "public",
@@ -346,6 +352,17 @@
       },
       "auth": "public",
       "order": 842
+    },
+    {
+      "reference": "deeptutor.api.routers.gamification:router",
+      "options": {
+        "prefix": "/api/v1/gamification",
+        "tags": [
+          "gamification"
+        ]
+      },
+      "auth": "authenticated",
+      "order": 600
     }
   ],
   "commands": [],

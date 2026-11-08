@@ -1,5 +1,5 @@
 {
-  "fingerprint": "a0b2223560f4a3a7d387664dd0dddda3bb133942c1a4cd6da846d2b81957bf73",
+  "fingerprint": "a6ccce256091fabfd3cc3665d0dbfd786501537b5fba2c3d81466b1cf0ed8763",
   "routers": {
     "deeptutor.api.routers.auth:router": [
       {
@@ -1298,6 +1298,48 @@
         ]
       }
     ],
+    "deeptutor.api.routers.companion:router": [
+      {
+        "path": "/proactive-greeting",
+        "name": "proactive_greeting",
+        "kind": "http",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/greeting-audio",
+        "name": "greeting_audio",
+        "kind": "http",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/presets/{persona}",
+        "name": "create_companion",
+        "kind": "http",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/{partner_id}/treehole",
+        "name": "treehole",
+        "kind": "http",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/{partner_id}/memory-note",
+        "name": "save_memory_note",
+        "kind": "http",
+        "methods": [
+          "POST"
+        ]
+      }
+    ],
     "deeptutor.api.routers.mastery_path:router": [
       {
         "path": "/topics",
@@ -1577,6 +1619,82 @@
         "kind": "http",
         "methods": [
           "POST"
+        ]
+      }
+    ],
+    "deeptutor.api.routers.nfc_trade:router": [
+      {
+        "path": "/token",
+        "name": "issue_token",
+        "kind": "http",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/pair",
+        "name": "pair",
+        "kind": "http",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/{session_id}",
+        "name": "trade_state",
+        "kind": "http",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/{session_id}/partner-hangout",
+        "name": "partner_hangout",
+        "kind": "http",
+        "methods": [
+          "POST"
+        ]
+      },
+      {
+        "path": "/{session_id}/partner-hangout",
+        "name": "hangout_state",
+        "kind": "http",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/{session_id}/partner-hangout/answer",
+        "name": "answer_hangout",
+        "kind": "http",
+        "methods": [
+          "POST"
+        ]
+      }
+    ],
+    "deeptutor.api.routers.game_guardian:router": [
+      {
+        "path": "/{user_id}/limits",
+        "name": "read_limits",
+        "kind": "http",
+        "methods": [
+          "GET"
+        ]
+      },
+      {
+        "path": "/{user_id}/limits",
+        "name": "change_limits",
+        "kind": "http",
+        "methods": [
+          "PUT"
+        ]
+      },
+      {
+        "path": "/{user_id}/weekly-report",
+        "name": "report",
+        "kind": "http",
+        "methods": [
+          "GET"
         ]
       }
     ],

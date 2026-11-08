@@ -7,6 +7,7 @@ import { useDevice } from '@/hooks/useDevice'
 import { useCapabilityFilter } from '@/features/capabilities/useCapabilityCatalog'
 import { usePageSlotRef } from '@/components/layout/PageChrome'
 import { FeatureCrumb } from '@/components/layout/LocationCrumbs'
+import { CompanionSyncBadge } from './CompanionSyncBadge'
 import { locatePage, pageSections } from './page-sections'
 
 function useShelves() {
@@ -63,6 +64,7 @@ export function PageBar() {
       <div ref={instanceRef} className="dt-page-bar-instance" />
       {exact && <div ref={metaRef} className="dt-page-bar-meta" />}
       <div ref={actionsRef} className="dt-page-bar-actions" />
+      <CompanionSyncBadge />
     </nav>
   )
 }

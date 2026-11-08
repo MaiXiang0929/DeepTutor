@@ -12,6 +12,9 @@
   "paths": [
     "deeptutor/partners",
     "deeptutor/services/partners",
+    "deeptutor/services/companion",
+    "deeptutor/api/routers/companion.py",
+    "deeptutor/api/routers/game_guardian.py",
     "deeptutor/services/partner_groups",
     "deeptutor/capabilities/partner_authoring",
     "deeptutor/capabilities/partner_group",
@@ -54,6 +57,18 @@
     }
   },
   "routes": [
+    {
+      "reference": "deeptutor.api.routers.game_guardian:router",
+      "options": {"prefix": "/api/v1/game-guardian", "tags": ["game-guardian"]},
+      "auth": "public",
+      "order": 603
+    },
+    {
+      "reference": "deeptutor.api.routers.companion:router",
+      "options": {"prefix": "/api/v1/companion", "tags": ["companion"]},
+      "auth": "authenticated",
+      "order": 601
+    },
     {
       "reference": "deeptutor.api.routers.partners:router",
       "options": {

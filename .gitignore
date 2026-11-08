@@ -16,6 +16,7 @@ data/
 /design-qa.md
 # Local development screenshots, acceptance snapshots, and task reports.
 /artifacts/
+.local/
 /.github/tdd/
 /site/
 .claude
@@ -108,6 +109,10 @@ out/
 .open-next/
 .wrangler/
 .vite/
+
+# Android packages
+*.apk
+*.aab
 
 # Yarn / Plug'n'Play
 .pnp
